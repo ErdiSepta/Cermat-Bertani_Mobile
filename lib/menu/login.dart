@@ -1,8 +1,11 @@
+import 'package:apps/main.dart';
 import 'package:apps/menu/lupapassword.dart';
 import 'package:apps/menu/register.dart';
 import 'package:apps/src/customColor.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+// Import halaman homepage Anda
+import 'package:apps/menu/homepage.dart'; // Sesuaikan dengan path yang benar
 
 
 class Login extends StatefulWidget {
@@ -27,6 +30,9 @@ class _LoginState extends State<Login> {
 
     if (_usernameError.isEmpty && _passwordError.isEmpty) {
       // Logika untuk login jika semua input valid
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const MainPage()),
+      );
     }
   }
 
@@ -40,10 +46,19 @@ class _LoginState extends State<Login> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: Image.asset(
-                  'assets/images/Logo Aplikasi.png',
-                  width: 320, // Ganti dengan path gambar Anda
-                  height: 320,
+                child: GestureDetector(
+                  onTap: () {
+                    // Navigasi ke MainPage alih-alih langsung ke Homepage
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MainPage()),
+                    );
+                  },
+                  child: Image.asset(
+                    'assets/images/Logo Aplikasi.png',
+                    width: 320,
+                    height: 320,
+                  ),
                 ),
               ),
               Center(
