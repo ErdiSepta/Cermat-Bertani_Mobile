@@ -1,6 +1,7 @@
 import 'package:apps/menu/register1.dart';
 import 'package:apps/src/customColor.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -65,6 +66,11 @@ class _RegisterState extends State<Register> {
                 const SizedBox(height: 10),
                 TextField(
                   controller: _nikController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(16),
+                  ],
                   decoration: InputDecoration(
                     hintText: 'Masukan NIK Sesuai KTP',
                     border: const OutlineInputBorder(
@@ -105,6 +111,9 @@ class _RegisterState extends State<Register> {
                 const SizedBox(height: 10),
                 TextField(
                   controller: _namaController,
+                  inputFormatters: [
+                    UpperCaseTextFormatter(),
+                  ],
                   decoration: InputDecoration(
                     hintText: 'Nama Lengkap Sesuai KTP',
                     border: const OutlineInputBorder(
@@ -272,6 +281,16 @@ class _RegisterState extends State<Register> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
     );
   }
 }

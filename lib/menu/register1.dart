@@ -116,6 +116,28 @@ class _Register1State extends State<Register1> {
     }
   }
 
+  bool _isCheckingUsername = false;
+  String _usernameAvailability = '';
+
+  void _checkUsernameAvailability() async {
+    setState(() {
+      _isCheckingUsername = true;
+      _usernameAvailability = '';
+    });
+
+    // Simulasi pengecekan username (ganti dengan logika sebenarnya nanti)
+    await Future.delayed(const Duration(seconds: 2));
+    
+    setState(() {
+      _isCheckingUsername = false;
+      if (_usernameController.text.toLowerCase() == 'admin') {
+        _usernameAvailability = 'Username tidak tersedia';
+      } else {
+        _usernameAvailability = 'Username tersedia';
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -150,35 +172,85 @@ class _Register1State extends State<Register1> {
                         fontFamily: 'NotoSan'),
                   ),
                   const SizedBox(height: 10),
-                  TextField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      hintText: 'Masukan Username',
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                        borderSide: BorderSide(
-                          color: Colors.black,
-                          width: 2.0,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _usernameController,
+                          decoration: InputDecoration(
+                            hintText: 'Masukan Username',
+                            border: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(8.0)), // Menambahkan border radius
+                              borderSide: BorderSide(
+                                color: Colors.black, // Warna border
+                                width: 2.0, // Ketebalan border
+                              ),
+                            ),
+                            enabledBorder: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                              borderSide: BorderSide(
+                                color: Colors.black,
+                                width: 1.0,
+                              ),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                              borderSide: BorderSide(
+                                color: Colors.black,
+                                width: 1.0,
+                              ),
+                            ),
+                            errorText:
+                                _usernameError.isNotEmpty ? _usernameError : null,
+                          ),
                         ),
                       ),
-                      enabledBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                        borderSide: BorderSide(
-                          color: Colors.black,
-                          width: 1.0,
+                      const SizedBox(width: 10),
+                      OutlinedButton(
+                        onPressed: _isCheckingUsername ? null : _checkUsernameAvailability,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.black,
+                          side: const BorderSide(color: Colors.black),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                         ),
+                        child: _isCheckingUsername
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                                ),
+                              )
+                            : const Text(
+                                'Check',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                  fontFamily: 'NotoSan',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
                       ),
-                      focusedBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                        borderSide: BorderSide(
-                          color: Colors.black,
-                          width: 1.0,
-                        ),
-                      ),
-                      errorText:
-                          _usernameError.isNotEmpty ? _usernameError : null,
-                    ),
+                    ],
                   ),
+                  if (_usernameAvailability.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        _usernameAvailability,
+                        style: TextStyle(
+                          color: _usernameAvailability == 'Username tersedia'
+                              ? Colors.green
+                              : Colors.red,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 20),
                   const Text(
                     'Password',

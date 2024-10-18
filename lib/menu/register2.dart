@@ -1,3 +1,4 @@
+import 'package:apps/menu/login.dart';
 import 'package:apps/src/customColor.dart';
 import 'package:flutter/material.dart';
 
@@ -42,7 +43,7 @@ class _Register2State extends State<Register2> {
               const SizedBox(height: 50),
               Center(
                 child: Text(
-                  'Berhasil',
+                  'Pendaftaran Berhasil',
                   style: TextStyle(
                     fontSize: 24,
                     color: CustomColors.coklatMedium,
@@ -50,6 +51,35 @@ class _Register2State extends State<Register2> {
                     ),
                   ),
                 ),
+                    const SizedBox(height: 50),
+                Center(
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => Login()),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: CustomColors.coklatMedium,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.0),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 15.0),
+                      ),
+                      child: const Text(
+                        'Kembali ke Menu Login',
+                        style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontFamily: 'NotoSan',
+                            fontWeight: FontWeight.w400),
+                      ),
+                    ),
+                  ),
+                ) 
               ],
             ),
           );
