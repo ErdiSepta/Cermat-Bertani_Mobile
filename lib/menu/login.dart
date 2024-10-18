@@ -1,3 +1,4 @@
+import 'package:apps/menu/lupapassword.dart';
 import 'package:apps/menu/register.dart';
 import 'package:apps/src/customColor.dart';
 import 'package:flutter/gestures.dart';
@@ -168,7 +169,12 @@ class _LoginState extends State<Login> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {
-                    // Tambahkan logika untuk lupa password di sini
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LupaPassword(),
+                      ),
+                    );
                   },
                   child: const Text(
                     'Lupa Password?',
