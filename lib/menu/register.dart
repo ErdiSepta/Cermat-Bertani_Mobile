@@ -23,13 +23,20 @@ class _RegisterState extends State<Register> {
   void _validateInputs() {
     setState(() {
       _nikError = _nikController.text.isEmpty ? 'NIK tidak boleh kosong' : '';
-      _namaError = _namaController.text.isEmpty ? 'Nama tidak boleh kosong' : '';
-      _alamatError = _alamatController.text.isEmpty ? 'Alamat tidak boleh kosong' : '';
-      _genderError = _selectedGender == null ? 'Jenis kelamin harus dipilih' : '';
+      _namaError =
+          _namaController.text.isEmpty ? 'Nama tidak boleh kosong' : '';
+      _alamatError =
+          _alamatController.text.isEmpty ? 'Alamat tidak boleh kosong' : '';
+      _genderError =
+          _selectedGender == null ? 'Jenis kelamin harus dipilih' : '';
     });
 
-    if (_nikError.isEmpty && _namaError.isEmpty && _alamatError.isEmpty && _genderError.isEmpty) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const Register1()));
+    if (_nikError.isEmpty &&
+        _namaError.isEmpty &&
+        _alamatError.isEmpty &&
+        _genderError.isEmpty) {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const Register1()));
     }
   }
 
@@ -161,7 +168,8 @@ class _RegisterState extends State<Register> {
                         width: 1.0,
                       ),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12.0),
                     errorText: _genderError.isNotEmpty ? _genderError : null,
                   ),
                   child: DropdownButtonHideUnderline(
@@ -276,6 +284,7 @@ class _RegisterState extends State<Register> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 30),
               ],
             ),
           ),
@@ -287,7 +296,8 @@ class _RegisterState extends State<Register> {
 
 class UpperCaseTextFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
     return TextEditingValue(
       text: newValue.text.toUpperCase(),
       selection: newValue.selection,

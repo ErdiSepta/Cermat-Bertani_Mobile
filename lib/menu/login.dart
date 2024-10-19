@@ -5,8 +5,7 @@ import 'package:apps/src/customColor.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 // Import halaman homepage Anda
-import 'package:apps/menu/homepage.dart'; // Sesuaikan dengan path yang benar
-
+// Sesuaikan dengan path yang benar
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -24,8 +23,10 @@ class _LoginState extends State<Login> {
 
   void _validateInputs() {
     setState(() {
-      _usernameError = _usernameController.text.isEmpty ? 'Username tidak boleh kosong' : '';
-      _passwordError = _passwordController.text.isEmpty ? 'Password tidak boleh kosong' : '';
+      _usernameError =
+          _usernameController.text.isEmpty ? 'Username tidak boleh kosong' : '';
+      _passwordError =
+          _passwordController.text.isEmpty ? 'Password tidak boleh kosong' : '';
     });
 
     if (_usernameError.isEmpty && _passwordError.isEmpty) {
@@ -119,7 +120,9 @@ class _LoginState extends State<Login> {
                       width: 1.0,
                     ),
                   ),
-                  errorText: _usernameError.isNotEmpty ? _usernameError : null, // Menampilkan pesan kesalahan
+                  errorText: _usernameError.isNotEmpty
+                      ? _usernameError
+                      : null, // Menampilkan pesan kesalahan
                 ),
               ),
               const SizedBox(height: 10),
@@ -176,7 +179,9 @@ class _LoginState extends State<Login> {
                       },
                     ),
                   ),
-                  errorText: _passwordError.isNotEmpty ? _passwordError : null, // Menampilkan pesan kesalahan
+                  errorText: _passwordError.isNotEmpty
+                      ? _passwordError
+                      : null, // Menampilkan pesan kesalahan
                 ),
               ),
               const SizedBox(height: 10),
@@ -254,7 +259,7 @@ class _LoginState extends State<Login> {
                 ),
               ),
               const SizedBox(height: 20),
-                            Center(
+              Center(
                 child: Text.rich(
                   TextSpan(
                     text: 'Belum Punya Akun? ',

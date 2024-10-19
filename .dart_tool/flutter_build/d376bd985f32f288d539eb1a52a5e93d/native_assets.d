@@ -1,0 +1,1 @@
+ D:\\Project\\Dinas\ Pertahanan\ Pangan\\Cermat-Bertani_Mobile\\.dart_tool\\flutter_build\\d376bd985f32f288d539eb1a52a5e93d\\native_assets.yaml: 
