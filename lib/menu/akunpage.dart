@@ -13,13 +13,7 @@ class Akunpage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Pengaturan Akun',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const AkunSettingsPage(), // Halaman pengaturan akun
-    );
+    return const AkunSettingsPage(); // Hapus MaterialApp di sini
   }
 }
 
@@ -32,6 +26,7 @@ class AkunSettingsPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Pengaturan'),
         centerTitle: true,
+        backgroundColor: const Color(0xFFD8A37E), // Sesuaikan warna AppBar
       ),
       body: Center(
         child: Column(
