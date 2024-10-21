@@ -33,7 +33,10 @@ class _UbahPasswordPageState extends State<UbahPasswordPage> {
   void initState() {
     super.initState();
     _controllers.forEach((key, controller) {
-      controller.addListener(() => _validateField(key));
+      controller.addListener(() {
+        _validateField(key);
+        setState(() {}); // Tambahkan ini untuk memperbarui UI
+      });
     });
   }
 
@@ -114,9 +117,7 @@ class _UbahPasswordPageState extends State<UbahPasswordPage> {
   }
 
   bool _isFormValid() {
-    return !_fieldEmpty['Password Lama']! &&
-           !_fieldEmpty['Password Baru']! &&
-           !_fieldEmpty['Konfirmasi Password Baru']! &&
+    return !_controllers.values.any((controller) => controller.text.isEmpty) &&
            _passwordMatch;
   }
 
@@ -171,7 +172,7 @@ class _UbahPasswordPageState extends State<UbahPasswordPage> {
                     ),
                     padding: EdgeInsets.symmetric(vertical: 12),
                   ),
-                  onPressed: _handleSimpanPerubahan,
+                  onPressed: _isFormValid() ? _handleSimpanPerubahan : null,
                   child: Text(
                     'Simpan Perubahan',
                     style: TextStyle(

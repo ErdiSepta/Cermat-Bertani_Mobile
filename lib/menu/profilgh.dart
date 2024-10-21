@@ -10,28 +10,28 @@ class ProfilGHPage extends StatefulWidget {
 
 class _ProfilGHPageState extends State<ProfilGHPage> {
   String selectedGH = 'GH 1';
-  
+
   final Map<String, Map<String, String>> ghData = {
     'GH 1': {
       'nama': 'Green House 1',
       'fokus': 'Tomat',
       'metode': 'Hidroponik',
       'alamat': 'Jl. Contoh No. 1',
-      'gambar': 'assets/images/gh1.jpg',
+      'gambar': 'assets/images/gh1.png',
     },
     'GH 2': {
       'nama': 'Green House 2',
       'fokus': 'Selada',
       'metode': 'Aeroponik',
       'alamat': 'Jl. Contoh No. 2',
-      'gambar': 'assets/images/gh2.jpg',
+      'gambar': 'assets/images/gh2.png',
     },
     'GH 3': {
       'nama': 'Green House 3',
       'fokus': 'Paprika',
       'metode': 'Akuaponik',
       'alamat': 'Jl. Contoh No. 3',
-      'gambar': 'assets/images/gh3.jpg',
+      'gambar': 'assets/images/gh3.png',
     },
   };
 
@@ -53,35 +53,26 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
             // Gambar GH
             Center(
               child: Container(
-                width: 250, // Ukuran lebar gambar
-                height: 250, // Ukuran tinggi gambar
+                width: 200,
+                height: 200,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20), // Sudut membulat
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
+                  shape: BoxShape.circle,
+                  color: Colors.grey[200],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
+                child: ClipOval(
                   child: Image.asset(
                     ghData[selectedGH]?['gambar'] ?? 'assets/images/default_gh.png',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       print('Error loading image: $error');
-                      return Center(child: Text('Gambar tidak tersedia'));
+                      return Icon(Icons.image_not_supported, size: 100, color: Colors.grey);
                     },
                   ),
                 ),
               ),
             ),
             SizedBox(height: 24),
-            
+
             // Dropdown
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12),
@@ -107,7 +98,7 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
               ),
             ),
             SizedBox(height: 24),
-            
+
             // Data GH
             buildInfoRow('Nama GH', ghData[selectedGH]!['nama']!),
             buildInfoRow('Fokus', ghData[selectedGH]!['fokus']!),
