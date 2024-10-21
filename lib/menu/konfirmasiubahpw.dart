@@ -3,73 +3,96 @@ import 'package:apps/src/customColor.dart';
 import 'package:apps/menu/akunpage.dart';
 
 class KonfirmasiUbahPWPage extends StatelessWidget {
-  const KonfirmasiUbahPWPage({Key? key, required String passwordLama, required String oldPassword, required String newPassword}) : super(key: key);
+  const KonfirmasiUbahPWPage({super.key, required String passwordLama, required String oldPassword, required String newPassword});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Ubah Password',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[600],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            double padding = constraints.maxWidth * 0.1;
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
                 ),
-              ),
-              SizedBox(height: 40),
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.green,
-                ),
-                child: Icon(
-                  Icons.check,
-                  color: Colors.white,
-                  size: 60,
-                ),
-              ),
-              SizedBox(height: 40),
-              Text(
-                'Ganti Password Berhasil',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: CustomColors.coklatMedium,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 60),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: CustomColors.coklatMedium,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: padding),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 50),
+                        Center(
+                          child: Text(
+                            'Ubah Password',
+                            style: TextStyle(
+                              fontSize: 28,
+                              color: CustomColors.coklatMedium,
+                              fontFamily: 'OdorMeanChey',
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Center(
+                          child: Image.asset(
+                            'assets/images/checkmark.png',
+                            width: 320,
+                            height: 320,
+                          ),
+                        ),
+                        const Spacer(),
+                        Center(
+                          child: Text(
+                            'Ganti Password Berhasil',
+                            style: TextStyle(
+                              fontSize: 24,
+                              color: CustomColors.coklatMedium,
+                              fontFamily: 'OdorMeanChey',
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Center(
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.8,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const Akunpage()),
+                                  (route) => false,
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: CustomColors.coklatMedium,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30.0),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 15.0),
+                              ),
+                              child: const Text(
+                                'Kembali Ke Menu Akun',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontFamily: 'NotoSan',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 50),
+                      ],
+                    ),
                   ),
-                  minimumSize: Size(200, 50),
-                ),
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => Akunpage()),
-                    (route) => false,
-                  );
-                },
-                child: Text(
-                  'Kembali Ke Menu Akun',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
                 ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:apps/src/topnav.dart'; // Pastikan path import ini benar
 
 class ProfilGHPage extends StatefulWidget {
-  const ProfilGHPage({Key? key}) : super(key: key);
+  const ProfilGHPage({super.key});
 
   @override
   _ProfilGHPageState createState() => _ProfilGHPageState();
@@ -38,7 +38,7 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
+      appBar: const PreferredSize(
         preferredSize: Size.fromHeight(kToolbarHeight),
         child: Topnav(
           title: 'Profil GH',
@@ -46,7 +46,7 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -65,17 +65,17 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       print('Error loading image: $error');
-                      return Icon(Icons.image_not_supported, size: 100, color: Colors.grey);
+                      return const Icon(Icons.image_not_supported, size: 100, color: Colors.grey);
                     },
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Dropdown
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey),
                 borderRadius: BorderRadius.circular(8),
@@ -83,7 +83,7 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
               child: DropdownButton<String>(
                 value: selectedGH,
                 isExpanded: true,
-                underline: SizedBox(),
+                underline: const SizedBox(),
                 items: ghData.keys.map((String gh) {
                   return DropdownMenuItem<String>(
                     value: gh,
@@ -97,7 +97,7 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
                 },
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Data GH
             buildInfoRow('Nama GH', ghData[selectedGH]!['nama']!),
@@ -118,15 +118,15 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(fontSize: 16),
+            style: const TextStyle(fontSize: 16),
           ),
         ],
       ),

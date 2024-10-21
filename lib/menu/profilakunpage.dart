@@ -184,12 +184,12 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         TextField(
           controller: controller,
           enabled: _isEditing,
@@ -208,10 +208,10 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
               borderSide: BorderSide(color: Colors.grey.shade400),
               borderRadius: BorderRadius.circular(8),
             ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
       ],
     );
   }

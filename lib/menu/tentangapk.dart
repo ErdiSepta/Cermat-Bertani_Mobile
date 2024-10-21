@@ -7,7 +7,7 @@ class TentangAplikasiPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
+      appBar: const PreferredSize(
         preferredSize: Size.fromHeight(kToolbarHeight),
         child: Topnav(
           title: 'Tentang Aplikasi',
@@ -15,11 +15,11 @@ class TentangAplikasiPage extends StatelessWidget {
         ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             Center(
               child: Image.asset(
                 'assets/images/Logo Aplikasi.png',
@@ -28,20 +28,20 @@ class TentangAplikasiPage extends StatelessWidget {
                 fit: BoxFit.contain,
               ),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             _buildInfoSection('Informasi Aplikasi', [
               'Nama Aplikasi: [Nama Aplikasi]',
               'Versi: 1.0.0',
               'Deskripsi: [Deskripsi singkat aplikasi]',
             ]),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildInfoSection('Kontak Dinas', [
               'Nama Dinas: [Nama Dinas]',
               'Alamat: [Alamat Dinas]',
               'Telepon: [Nomor Telepon]',
               'Email: [Alamat Email]',
             ]),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildInfoSection('Personal Business', [
               'Nama: [Nama Personal/Perusahaan]',
               'Alamat: [Alamat]',
@@ -60,11 +60,11 @@ class TentangAplikasiPage extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         ...items.map((item) => Padding(
-              padding: EdgeInsets.only(bottom: 4),
+              padding: const EdgeInsets.only(bottom: 4),
               child: Text(item),
             )),
       ],
