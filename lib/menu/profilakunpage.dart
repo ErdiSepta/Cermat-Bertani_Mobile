@@ -28,12 +28,14 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
     _controllers['NIK'] = TextEditingController(text: '3512395710297312');
     _controllers['Jenis Kelamin'] = TextEditingController(text: 'Laki - Laki');
     _controllers['No Hp'] = TextEditingController(text: '081345123120');
-    _controllers['Alamat Lengkap'] = TextEditingController(text: 'Nganjuk, Bogo');
+    _controllers['Alamat Lengkap'] =
+        TextEditingController(text: 'Nganjuk, Bogo');
     _controllers['Jumlah GH'] = TextEditingController(text: '3');
   }
 
   Future<void> getImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       setState(() {
@@ -90,7 +92,7 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                       bottom: 0,
                       right: 0,
                       child: GestureDetector(
-                        onTap: getImage,
+                        onTap: _isEditing ? getImage : null,
                         child: Container(
                           height: 30,
                           width: 30,
@@ -110,7 +112,8 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              ..._controllers.entries.map((e) => buildTextField(e.key, e.value)),
+              ..._controllers.entries
+                  .map((e) => buildTextField(e.key, e.value)),
               const SizedBox(height: 50),
               Row(
                 children: [
@@ -131,11 +134,10 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                       child: Text(
                         _isEditing ? 'Selesai' : 'Edit',
                         style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontFamily: 'NotoSan',
-                          fontWeight: FontWeight.w400
-                        ),
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontFamily: 'NotoSan',
+                            fontWeight: FontWeight.w400),
                       ),
                     ),
                   ),
@@ -149,20 +151,21 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 15.0),
                       ),
-                      onPressed: _isEditing ? () {
-                        // Implementasi fungsi save
-                        setState(() {
-                          _isEditing = false;
-                        });
-                      } : null,
+                      onPressed: _isEditing
+                          ? () {
+                              // Implementasi fungsi save
+                              setState(() {
+                                _isEditing = false;
+                              });
+                            }
+                          : null,
                       child: const Text(
                         'Save',
                         style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontFamily: 'NotoSan',
-                          fontWeight: FontWeight.w400
-                        ),
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontFamily: 'NotoSan',
+                            fontWeight: FontWeight.w400),
                       ),
                     ),
                   ),
@@ -176,56 +179,40 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
   }
 
   Widget buildTextField(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.black,
-              fontWeight: FontWeight.w400,
-              fontFamily: 'NotoSan'
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: controller,
-            readOnly: !_isEditing,
-            decoration: InputDecoration(
-              hintText: controller.text,
-              hintStyle: const TextStyle(color: Colors.black),
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                borderSide: BorderSide(
-                  color: Colors.black,
-                  width: 2.0,
-                ),
-              ),
-              enabledBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                borderSide: BorderSide(
-                  color: Colors.black,
-                  width: 1.0,
-                ),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                borderSide: BorderSide(
-                  color: Colors.black,
-                  width: 1.0,
-                ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 15.0,
-                horizontal: 12.0
-              ),
+        ),
+        SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          enabled: _isEditing,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
             ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey.shade400),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
-        ],
-      ),
+        ),
+        SizedBox(height: 16),
+      ],
     );
   }
 }

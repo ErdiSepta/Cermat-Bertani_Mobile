@@ -2,6 +2,7 @@ import 'package:apps/menu/profilakunpage.dart';
 import 'package:apps/menu/profilgh.dart';
 import 'package:apps/menu/tambahghpage.dart';
 import 'package:apps/menu/tentangapk.dart';
+import 'package:apps/menu/ubahpassword.dart';
 import 'package:flutter/material.dart';
 
 class Akunpage extends StatelessWidget {
@@ -72,9 +73,11 @@ class AkunSettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           buildListTile(context, Icons.person_outline, 'Profil Akun', const ProfilAkunPage()),
+          buildListTile(context, Icons.info_outline, 'Ubah Password', const UbahPasswordPage()),
           buildListTile(context, Icons.add_circle_outline, 'Tambah GH', const TambahGHPage()),
           buildListTile(context, Icons.home_work_outlined, 'Profil GH', const ProfilGHPage()),
           buildListTile(context, Icons.info_outline, 'Tentang Aplikasi', const TentangAplikasiPage()),
+          
         ],
       ),
     );
