@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:apps/src/customColor.dart';
-import 'package:apps/menu/akunpage.dart';
+import 'package:apps/main.dart'; // Pastikan ini mengarah ke file main.dart Anda
 
 class KonfirmasiUbahPWPage extends StatelessWidget {
   const KonfirmasiUbahPWPage({super.key, required String passwordLama, required String oldPassword, required String newPassword});
@@ -60,10 +60,11 @@ class KonfirmasiUbahPWPage extends StatelessWidget {
                             width: MediaQuery.of(context).size.width * 0.8,
                             child: ElevatedButton(
                               onPressed: () {
-                                Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const Akunpage()),
-                                  (route) => false,
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                    builder: (context) => MainPage(initialIndex: 3), // Gunakan 3 jika Akun adalah indeks ke-4 (ingat indeks dimulai dari 0)
+                                  ),
+                                  (Route<dynamic> route) => false,
                                 );
                               },
                               style: ElevatedButton.styleFrom(
