@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
 class MainPage extends StatefulWidget {
   final int initialIndex;
   
-  const MainPage({Key? key, this.initialIndex = 0}) : super(key: key);
+  const MainPage({super.key, this.initialIndex = 0});
 
   @override
   _MainPageState createState() => _MainPageState();

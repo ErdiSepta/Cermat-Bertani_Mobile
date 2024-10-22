@@ -47,7 +47,7 @@ class _SplashscreenState extends State<Splashscreen> with SingleTickerProviderSt
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/images/Logo Aplikasi.png', width: 180, height: 180),
+            Image.asset('assets/images/LogoApk.png', width: 180, height: 180),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

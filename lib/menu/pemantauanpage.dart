@@ -51,7 +51,7 @@ class _PemantauanPagesState extends State<PemantauanPages> {
             const SizedBox(height: 20),
             ...menuItems.map((item) => buildListTile(context, item["icon"], item["title"], () {
               // Tambahkan navigasi atau aksi yang sesuai di sini
-            })).toList(),
+            })),
           ],
         ),
       ),

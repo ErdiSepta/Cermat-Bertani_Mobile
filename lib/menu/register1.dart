@@ -435,7 +435,7 @@ class _Register1State extends State<Register1> {
                                       onPressed: _onCreateAccount,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor:
-                                            CustomColors.coklatMedium,
+                                            CustomColors.hijauPrimary, // Mengubah warna tombol di sini
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(30.0),

@@ -56,7 +56,7 @@ class _LoginState extends State<Login> {
                     );
                   },
                   child: Image.asset(
-                    'assets/images/Logo Aplikasi.png',
+                    'assets/images/LogoApk.png',
                     width: 320,
                     height: 320,
                   ),
@@ -78,9 +78,8 @@ class _LoginState extends State<Login> {
                   'Hasil Maksimal',
                   style: TextStyle(
                     fontSize: 28,
-                    color: CustomColors.Orange,
-                    fontFamily:
-                        'OdorMeanChey', // Ganti dengan nama font kustom Anda
+                    color: CustomColors.hijauPrimary, // Mengubah warna di sini
+                    fontFamily: 'OdorMeanChey',
                   ),
                 ),
               ),
@@ -212,8 +211,7 @@ class _LoginState extends State<Login> {
                   child: ElevatedButton(
                     onPressed: _validateInputs,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: CustomColors
-                          .coklatMedium, // Ganti dengan warna yang diinginkan
+                      backgroundColor: CustomColors.hijauPrimary, // Mengubah warna tombol di sini
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30.0),
                       ),
@@ -271,7 +269,7 @@ class _LoginState extends State<Login> {
                       TextSpan(
                         text: 'Register Disini',
                         style: TextStyle(
-                            color: CustomColors.Orange,
+                            color: CustomColors.hijauPrimary, // Mengubah warna di sini
                             fontFamily: 'NotoSan',
                             fontWeight: FontWeight.w400),
                         recognizer: TapGestureRecognizer()

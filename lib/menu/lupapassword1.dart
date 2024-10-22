@@ -120,7 +120,7 @@ class _lupapassword1state extends State<Lupapassword1> {
                     child: ElevatedButton(
                       onPressed: _validateInputs,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: CustomColors.coklatMedium,
+                        backgroundColor: CustomColors.hijauPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30.0),
                         ),
