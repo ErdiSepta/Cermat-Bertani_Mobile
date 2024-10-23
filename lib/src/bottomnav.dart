@@ -1,3 +1,4 @@
+import 'package:apps/src/customColor.dart';
 import 'package:flutter/material.dart';
 
 class Bottomnav extends StatelessWidget {
@@ -33,7 +34,7 @@ class Bottomnav extends StatelessWidget {
           onTap: onTap,
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
-          selectedItemColor: Colors.brown,
+          selectedItemColor: CustomColors.BiruPrimary,
           unselectedItemColor: Colors.grey,
           selectedFontSize: 12,
           unselectedFontSize: 12,
@@ -57,7 +58,7 @@ class Bottomnav extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         padding: EdgeInsets.all(currentIndex == index ? 12 : 8),
         decoration: BoxDecoration(
-          color: currentIndex == index ? Colors.brown.withOpacity(0.2) : Colors.transparent,
+          color: currentIndex == index ? CustomColors.BiruPrimary.withOpacity(0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Icon(icons[index]),

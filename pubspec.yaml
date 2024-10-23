@@ -81,10 +81,7 @@ flutter:
         - asset: assets/fonts/OdorMeanChey-Regular.ttf
     - family: NotoSan
       fonts:
-        - asset: assets/fonts/NotoSans-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/NotoSans-Bold.ttf
-          weight: 700
+        - asset: assets/fonts/NotoSans_Condensed-Black.ttf
     - family: Manjari
       fonts:
         - asset: assets/fonts/Manjari-Bold.ttf

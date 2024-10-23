@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:apps/menu/login.dart';
+import 'package:apps/menu/loginPages.dart';
 import 'src/customColor.dart';
 class Splashscreen extends StatefulWidget {
   const Splashscreen({super.key});
@@ -47,7 +47,7 @@ class _SplashscreenState extends State<Splashscreen> with SingleTickerProviderSt
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/images/LogoApk.png', width: 180, height: 180),
+            Image.asset('assets/images/Logos Apps Splash.png', width: 180, height: 180),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -58,7 +58,7 @@ class _SplashscreenState extends State<Splashscreen> with SingleTickerProviderSt
                   height: 10,
                   width: 10,
                   decoration: BoxDecoration(
-                    color: _currentIndex == index ?  CustomColors.coklatMedium: CustomColors.abupudar,
+                    color: _currentIndex == index ?  CustomColors.BiruPrimary: CustomColors.abupudar,
                     shape: BoxShape.circle,
                   ),
                 );
