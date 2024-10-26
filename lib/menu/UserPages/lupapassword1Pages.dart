@@ -1,5 +1,6 @@
 import 'package:apps/menu/UserPages/lupapassword2pages.dart';
 import 'package:apps/src/customFormfield.dart';
+import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customColor.dart';
 
@@ -23,7 +24,7 @@ class _Lupapassword1State extends State<Lupapassword1> {
     if (_emailError.isEmpty) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const LupaPassword2()),
+        SmoothPageTransition(page: const LupaPassword2()),
       );
     }
   }
@@ -31,6 +32,17 @@ class _Lupapassword1State extends State<Lupapassword1> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text(
+          'Lupa Password',
+          style: TextStyle(
+            fontSize: 28,
+            color: Colors.black,
+            fontFamily: 'OdorMeanChey',
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(

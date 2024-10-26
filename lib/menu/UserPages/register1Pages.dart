@@ -1,6 +1,7 @@
 import 'package:apps/menu/UserPages/register2Pages.dart';
 import 'package:apps/src/customColor.dart';
 import 'package:apps/src/customFormfield.dart';
+import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:apps/src/autofilltext.dart';
@@ -121,7 +122,7 @@ class _RegisterState extends State<Register> {
         _genderError.isEmpty &&
         _noHpError.isEmpty) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => const Register2()));
+          context, SmoothPageTransition(page: const Register2()));
     }
   }
 

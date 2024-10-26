@@ -1,4 +1,5 @@
 import 'package:apps/menu/UserPages/loginPages.dart';
+import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 import 'src/customColor.dart';
 class Splashscreen extends StatefulWidget {
@@ -29,7 +30,7 @@ class _SplashscreenState extends State<Splashscreen> with SingleTickerProviderSt
     Future.delayed(const Duration(seconds: 3), () {
       // Ganti 'HomeScreen()' dengan halaman tujuan Anda
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const Login()),
+        SmoothPageTransition(page: const Login()),
       );
     });
   }

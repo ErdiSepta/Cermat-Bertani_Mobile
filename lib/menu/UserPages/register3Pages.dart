@@ -1,6 +1,7 @@
 import 'package:apps/menu/UserPages/register4Pages.dart';
 import 'package:apps/src/customColor.dart';
 import 'package:apps/src/customFormfield.dart';
+import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 
 class Register3 extends StatefulWidget {
@@ -149,7 +150,7 @@ class _Register3State extends State<Register3> {
                     child: ElevatedButton(
                       onPressed: _isButtonEnabled
                           ? () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => const Register4pages()));
+                              Navigator.push(context, SmoothPageTransition(page: const Register4pages()));
                             }
                           : null,
                       style: ElevatedButton.styleFrom(

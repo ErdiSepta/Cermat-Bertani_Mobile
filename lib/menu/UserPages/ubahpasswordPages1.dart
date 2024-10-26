@@ -1,4 +1,5 @@
 import 'package:apps/menu/UserPages/ubahpasswordPages2.dart';
+import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/topnav.dart';
 import 'package:apps/src/customColor.dart'; // Pastikan untuk mengimpor halaman konfirmasi
@@ -106,8 +107,8 @@ class _UbahPasswordPage1State extends State<UbahPasswordPage1> {
       print("Form valid, mencoba navigasi ke Ubahpasswordpages2");
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => Ubahpasswordpages2(
+        SmoothPageTransition(
+          page: Ubahpasswordpages2(
             passwordLama: _controllers['Password Lama']!.text,
             passwordBaru: _controllers['Password Baru']!.text,
           ),

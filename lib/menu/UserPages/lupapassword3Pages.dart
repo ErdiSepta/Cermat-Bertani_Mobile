@@ -1,5 +1,6 @@
 import 'package:apps/menu/UserPages/lupapassword4Pages.dart';
 import 'package:apps/src/customFormfield.dart';
+import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customColor.dart';
 
@@ -81,7 +82,7 @@ class _Lupapassword3State extends State<Lupapassword3> {
         _isPasswordMatch) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const LupaPassword4()),
+        SmoothPageTransition(page: const LupaPassword4()),
       );
     } else if (!_isPasswordMatch) {
       showDialog(

@@ -1,5 +1,6 @@
 import 'package:apps/menu/UserPages/lupapassword3Pages.dart';
 import 'package:apps/src/customFormfield.dart';
+import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customColor.dart';
 import 'dart:async';
@@ -71,7 +72,7 @@ class _LupaPassword2State extends State<LupaPassword2> {
         // Navigasi ke halaman reset password
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const Lupapassword3()),
+          SmoothPageTransition(page: const Lupapassword3()),
         );
       }
     });

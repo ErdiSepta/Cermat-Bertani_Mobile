@@ -1,5 +1,6 @@
 import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:apps/src/customColor.dart';
+import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 
 class LupaPassword4 extends StatefulWidget {
@@ -51,7 +52,7 @@ class _LupaPassword4State extends State<LupaPassword4> {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const Login()),
+                      SmoothPageTransition(page: const Login()),
                     );
                   },
                   style: ElevatedButton.styleFrom(

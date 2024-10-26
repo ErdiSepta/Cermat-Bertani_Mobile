@@ -3,6 +3,7 @@ import 'package:apps/menu/UserPages/lupapassword1Pages.dart';
 import 'package:apps/menu/UserPages/register1Pages.dart';
 import 'package:apps/src/customColor.dart';
 import 'package:apps/src/customFormfield.dart';
+import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -31,7 +32,7 @@ class _LoginState extends State<Login> {
     if (_usernameError.isEmpty && _passwordError.isEmpty) {
       // Logika untuk login jika semua input valid
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MainPage()),
+        SmoothPageTransition(page: const MainPage()),
       );
     }
   }
@@ -51,7 +52,7 @@ class _LoginState extends State<Login> {
                     // Navigasi ke MainPage alih-alih langsung ke Homepage
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const MainPage()),
+                      SmoothPageTransition(page: const MainPage()),
                     );
                   },
                   child: Image.asset(
@@ -119,8 +120,8 @@ class _LoginState extends State<Login> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const Lupapassword1(),
+                      SmoothPageTransition  (
+                        page: const Lupapassword1(),
                       ),
                     );
                   },
@@ -207,8 +208,8 @@ class _LoginState extends State<Login> {
                           ..onTap = () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => const Register(),
+                              SmoothPageTransition(
+                                page: const Register(),
                               ),
                             );
                           },

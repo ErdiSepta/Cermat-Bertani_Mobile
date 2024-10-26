@@ -1,5 +1,6 @@
 import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:apps/src/customColor.dart';
+import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 
 class Register4pages extends StatelessWidget {
@@ -46,7 +47,7 @@ class Register4pages extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const Login()),
+                      SmoothPageTransition(page: const Login()),
                     );
                   },
                   style: ElevatedButton.styleFrom(

@@ -1,5 +1,6 @@
 import 'package:apps/menu/UserPages/register3Pages.dart';
 import 'package:apps/src/customFormfield.dart';
+import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customColor.dart';
 import 'dart:async';
@@ -73,7 +74,7 @@ class _Register2State extends State<Register2> {
         // Jika verifikasi berhasil, arahkan ke Register3
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const Register3()),
+          SmoothPageTransition(page: const Register3()),
         );
       }
     });

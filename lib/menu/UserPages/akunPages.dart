@@ -3,6 +3,7 @@ import 'package:apps/menu/UserPages/profilghPages.dart';
 import 'package:apps/menu/UserPages/tambahghPages.dart';
 import 'package:apps/menu/UserPages/tentangapkPages.dart';
 import 'package:apps/menu/UserPages/ubahpasswordPages1.dart';
+import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/menu/UserPages/loginPages.dart';  // Sesuaikan dengan path file login Anda
 
@@ -81,7 +82,7 @@ class AkunSettingsPage extends StatelessWidget {
             buildMenuButton(context, Icons.add_circle_outline,
                 'Tambah Greenhouse Baru', const TambahghpagePages()),
             buildMenuButton(context, Icons.info_outline, 'Tentang Aplikasi',
-                const TentangAplikasiPage()),
+                const Tentangapk()),
             // Tombol keluar dengan warna merah
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 10),
@@ -100,7 +101,7 @@ class AkunSettingsPage extends StatelessWidget {
                       // Navigasi ke halaman login dan hapus semua halaman sebelumnya
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (context) => const Login()),
+                        SmoothPageTransition(page: const Login()),
                         (route) => false,  // Ini akan menghapus semua halaman sebelumnya
                       );
                     },
@@ -149,7 +150,7 @@ class AkunSettingsPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             onTap: () {
               Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => page));
+                  context, SmoothPageTransition(page: page));
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
