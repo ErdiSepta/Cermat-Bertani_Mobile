@@ -1,3 +1,4 @@
+import 'package:apps/src/customColor.dart';
 import 'package:flutter/material.dart';
 
 class Topnav extends StatelessWidget {
@@ -13,7 +14,7 @@ class Topnav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: const Color(0xFFD8A37E),
+      backgroundColor: CustomColors.BiruPrimary,
       elevation: 0,
       centerTitle: true,
       title: Text(
@@ -21,7 +22,7 @@ class Topnav extends StatelessWidget {
         style: const TextStyle(
           color: Colors.white,
           fontSize: 20,
-          fontWeight: FontWeight.bold,
+          fontFamily: 'OdorMeanChey',
         ),
       ),
       leading: showBackButton

@@ -38,6 +38,8 @@ class Bottomnav extends StatelessWidget {
           unselectedItemColor: Colors.grey,
           selectedFontSize: 12,
           unselectedFontSize: 12,
+          selectedLabelStyle: const TextStyle(fontFamily: 'NotoSanSemiBold'),
+          unselectedLabelStyle: const TextStyle(fontFamily: 'NotoSanSemiBold'),
           items: List.generate(4, (index) => _buildNavItem(index)),
         ),
       ),
@@ -58,7 +60,9 @@ class Bottomnav extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         padding: EdgeInsets.all(currentIndex == index ? 12 : 8),
         decoration: BoxDecoration(
-          color: currentIndex == index ? CustomColors.BiruPrimary.withOpacity(0.2) : Colors.transparent,
+          color: currentIndex == index
+              ? CustomColors.BiruPrimary.withOpacity(0.2)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Icon(icons[index]),

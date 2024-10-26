@@ -1,7 +1,7 @@
-import 'package:apps/menu/akunPages.dart';
-import 'package:apps/menu/homePages.dart';
-import 'package:apps/menu/pemantauanPages.dart';
-import 'package:apps/menu/pendataanPages.dart';
+import 'package:apps/menu/UserPages/akunPages.dart';
+import 'package:apps/menu/MainMenu/homePages.dart';
+import 'package:apps/menu/MainMenu/pemantauanPages.dart';
+import 'package:apps/menu/MainMenu/pendataanPages.dart';
 import 'package:apps/splashscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/bottomnav.dart';

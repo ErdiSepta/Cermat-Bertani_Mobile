@@ -1,5 +1,5 @@
+import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:flutter/material.dart';
-import 'package:apps/menu/loginPages.dart';
 import 'src/customColor.dart';
 class Splashscreen extends StatefulWidget {
   const Splashscreen({super.key});
