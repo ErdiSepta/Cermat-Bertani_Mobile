@@ -21,7 +21,7 @@ class Topnav extends StatelessWidget {
         title,
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 20,
+          fontSize: 25,
           fontFamily: 'OdorMeanChey',
         ),
       ),

@@ -1,7 +1,7 @@
 import 'package:apps/menu/UserPages/akunPages.dart';
 import 'package:apps/menu/MainMenu/homePages.dart';
-import 'package:apps/menu/MainMenu/pemantauanPages.dart';
-import 'package:apps/menu/MainMenu/pendataanPages.dart';
+import 'package:apps/menu/MainMenu/pemantauan1Pages.dart';
+import 'package:apps/menu/MainMenu/pendataan1Pages.dart';
 import 'package:apps/splashscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/bottomnav.dart';
@@ -43,8 +43,8 @@ class _MainPageState extends State<MainPage> {
 
   final List<Widget> _pages = [
     const Homepage(),
-    const PemantauanPages(),
-    const PendataanPage(),
+    const Pemantauan1pages(),
+    const Pendataan1pages(),
     const Akunpage(),
   ];
 

@@ -5,7 +5,7 @@ import 'package:apps/menu/UserPages/tentangapkPages.dart';
 import 'package:apps/menu/UserPages/ubahpasswordPages1.dart';
 import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
-import 'package:apps/menu/UserPages/loginPages.dart';  // Sesuaikan dengan path file login Anda
+import 'package:apps/menu/UserPages/loginPages.dart'; // Sesuaikan dengan path file login Anda
 
 class Akunpage extends StatelessWidget {
   const Akunpage({super.key});
@@ -24,12 +24,11 @@ class AkunSettingsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Pengaturan',
+          'Akun',
           style: TextStyle(
-            fontFamily: 'NotoSan',
             color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontSize: 25,
+            fontFamily: 'OdorMeanChey', // Mengubah font family sesuai topnav
           ),
         ),
         backgroundColor: Colors.blue,
@@ -102,14 +101,16 @@ class AkunSettingsPage extends StatelessWidget {
                       Navigator.pushAndRemoveUntil(
                         context,
                         SmoothPageTransition(page: const Login()),
-                        (route) => false,  // Ini akan menghapus semua halaman sebelumnya
+                        (route) =>
+                            false, // Ini akan menghapus semua halaman sebelumnya
                       );
                     },
                     child: const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          Icon(Icons.logout_outlined, color: Colors.white, size: 22),
+                          Icon(Icons.logout_outlined,
+                              color: Colors.white, size: 22),
                           SizedBox(width: 12),
                           Text(
                             'Keluar',
@@ -149,8 +150,7 @@ class AkunSettingsPage extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
-              Navigator.push(
-                  context, SmoothPageTransition(page: page));
+              Navigator.push(context, SmoothPageTransition(page: page));
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -31,7 +31,11 @@ class Bottomnav extends StatelessWidget {
         ),
         child: BottomNavigationBar(
           currentIndex: currentIndex,
-          onTap: onTap,
+          onTap: (index) {
+            // Tambahkan animasi fade pada perpindahan
+            PageStorage.of(context)?.writeState(context, index, identifier: 'bottom_nav_index');
+            onTap(index);
+          },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
           selectedItemColor: CustomColors.BiruPrimary,
