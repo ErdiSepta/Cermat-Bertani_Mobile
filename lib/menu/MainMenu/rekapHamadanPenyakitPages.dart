@@ -11,10 +11,14 @@ class RekapHamadanPenyakitPages extends StatefulWidget {
 
 class _RekapHamadanPenyakitPagesState extends State<RekapHamadanPenyakitPages> {
   String? selectedGreenhouse;
+  String _greenhouseError = '';
+  String _tanggalAwalError = '';
+  String _tanggalAkhirError = '';
+
   final TextEditingController tanggalAwalController = TextEditingController();
   final TextEditingController tanggalAkhirController = TextEditingController();
 
-  final List<String> greenhouseList = ['GH-01', 'GH-02', 'GH-03'];
+  final List<String> greenhouseList = ['Pilih Greenhouse', 'GH-01', 'GH-02', 'GH-03'];
 
   Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
@@ -50,6 +54,40 @@ class _RekapHamadanPenyakitPagesState extends State<RekapHamadanPenyakitPages> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    tanggalAwalController.addListener(_clearTanggalAwalError);
+    tanggalAkhirController.addListener(_clearTanggalAkhirError);
+  }
+
+  // Clear error functions
+  void _clearTanggalAwalError() {
+    if (_tanggalAwalError.isNotEmpty) {
+      setState(() => _tanggalAwalError = '');
+    }
+  }
+
+  void _clearTanggalAkhirError() {
+    if (_tanggalAkhirError.isNotEmpty) {
+      setState(() => _tanggalAkhirError = '');
+    }
+  }
+
+  void _validateInputs() {
+    setState(() {
+      _greenhouseError = selectedGreenhouse == null ? 'Greenhouse harus dipilih' : '';
+      _tanggalAwalError = tanggalAwalController.text.isEmpty ? 'Tanggal awal harus diisi' : '';
+      _tanggalAkhirError = tanggalAkhirController.text.isEmpty ? 'Tanggal akhir harus diisi' : '';
+    });
+
+    if (_greenhouseError.isEmpty && 
+        _tanggalAwalError.isEmpty && 
+        _tanggalAkhirError.isEmpty) {
+      print('Semua data valid, siap untuk disimpan');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const PreferredSize(
@@ -78,9 +116,11 @@ class _RekapHamadanPenyakitPagesState extends State<RekapHamadanPenyakitPages> {
                 hintText: 'Pilih Greenhouse',
                 value: selectedGreenhouse ?? greenhouseList[0],
                 items: greenhouseList,
+                errorText: _greenhouseError.isNotEmpty ? _greenhouseError : null,
                 onChanged: (String? newValue) {
                   setState(() {
                     selectedGreenhouse = newValue;
+                    _greenhouseError = '';
                   });
                 },
               ),
@@ -111,6 +151,7 @@ class _RekapHamadanPenyakitPagesState extends State<RekapHamadanPenyakitPages> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
+                        errorText: _tanggalAwalError.isNotEmpty ? _tanggalAwalError : null,
                       ),
                       readOnly: true,
                     ),
@@ -133,6 +174,7 @@ class _RekapHamadanPenyakitPagesState extends State<RekapHamadanPenyakitPages> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
+                        errorText: _tanggalAkhirError.isNotEmpty ? _tanggalAkhirError : null,
                       ),
                       readOnly: true,
                     ),
@@ -150,7 +192,7 @@ class _RekapHamadanPenyakitPagesState extends State<RekapHamadanPenyakitPages> {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
-                    headingRowColor: MaterialStateProperty.all(Colors.blue[50]),
+                    headingRowColor: WidgetStateProperty.all(Colors.blue[50]),
                     columns: const [
                       DataColumn(
                         label: Text(
@@ -213,9 +255,7 @@ class _RekapHamadanPenyakitPagesState extends State<RekapHamadanPenyakitPages> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Implementasi fungsi print
-                  },
+                  onPressed: _validateInputs,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     padding: const EdgeInsets.symmetric(vertical: 15),
@@ -242,8 +282,8 @@ class _RekapHamadanPenyakitPagesState extends State<RekapHamadanPenyakitPages> {
 
   @override
   void dispose() {
-    tanggalAwalController.dispose();
-    tanggalAkhirController.dispose();
+    tanggalAwalController.removeListener(_clearTanggalAwalError);
+    tanggalAkhirController.removeListener(_clearTanggalAkhirError);
     super.dispose();
   }
 }

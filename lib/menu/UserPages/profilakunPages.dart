@@ -4,6 +4,9 @@ import 'package:apps/src/topnav.dart';
 import 'package:apps/src/customColor.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:apps/src/customDropdown.dart';
+import 'package:apps/src/customConfirmDialog.dart';
 
 class ProfilAkunPage extends StatefulWidget {
   const ProfilAkunPage({super.key});
@@ -20,7 +23,8 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
   // Definisi controller untuk setiap field secara manual
   final namaLengkapController = TextEditingController(text: 'Ilhammm');
   final nikController = TextEditingController(text: '3512395710297312');
-  final jenisKelaminController = TextEditingController(text: 'Laki - Laki');
+  String _selectedJenisKelamin = 'Laki - Laki'; // Default value
+  final List<String> _jenisKelaminItems = ['Laki - Laki', 'Perempuan'];
   final noHpController = TextEditingController(text: '081345123120');
   final alamatController = TextEditingController(text: 'Nganjuk, Bogo');
   final jumlahGHController = TextEditingController(text: '3');
@@ -39,7 +43,6 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
     // Tambahkan listeners untuk setiap controller
     namaLengkapController.addListener(() => _clearError('namaLengkap'));
     nikController.addListener(() => _clearError('nik'));
-    jenisKelaminController.addListener(() => _clearError('jenisKelamin'));
     noHpController.addListener(() => _clearError('noHp'));
     alamatController.addListener(() => _clearError('alamat'));
     jumlahGHController.addListener(() => _clearError('jumlahGH'));
@@ -64,17 +67,35 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
     });
   }
 
-  void _validateInputs() {
+  void _validateInputs() async {
     setState(() {
+      // Validasi NIK
+      if (nikController.text.isEmpty) {
+        _nikError = 'NIK tidak boleh kosong';
+      } else if (nikController.text.length != 16) {
+        _nikError = 'NIK harus 16 digit';
+      } else {
+        _nikError = '';
+      }
+
+      // Validasi No HP
+      if (noHpController.text.isEmpty) {
+        _noHpError = 'Nomor HP tidak boleh kosong';
+      } else if (!noHpController.text.startsWith('08')) {
+        _noHpError = 'Nomor HP Tidak Valid';
+      } else if (noHpController.text.length > 13) {
+        _noHpError = 'Nomor HP maksimal 13 digit';
+      } else {
+        _noHpError = '';
+      }
+
+      // Validasi lainnya
       _namaLengkapError = namaLengkapController.text.isEmpty
           ? 'Nama lengkap tidak boleh kosong'
           : '';
-      _nikError = nikController.text.isEmpty ? 'NIK tidak boleh kosong' : '';
-      _jenisKelaminError = jenisKelaminController.text.isEmpty
+      _jenisKelaminError = _selectedJenisKelamin.isEmpty
           ? 'Jenis kelamin tidak boleh kosong'
           : '';
-      _noHpError =
-          noHpController.text.isEmpty ? 'No HP tidak boleh kosong' : '';
       _alamatError =
           alamatController.text.isEmpty ? 'Alamat tidak boleh kosong' : '';
       _jumlahGHError =
@@ -87,26 +108,20 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
         _noHpError.isEmpty &&
         _alamatError.isEmpty &&
         _jumlahGHError.isEmpty) {
-      showDialog(
+      // Menampilkan CustomConfirmDialog
+      bool konfirmasi = await CustomConfirmDialog.show(
         context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Sukses'),
-            content: const Text('Data profil berhasil disimpan'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _isEditing = false;
-                  });
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
+        title: 'Konfirmasi',
+        message: 'Apakah Anda yakin ingin menyimpan perubahan data?',
+        confirmText: 'Simpan',
+        cancelText: 'Batal',
       );
+
+      if (konfirmasi && mounted) {
+        setState(() {
+          _isEditing = false;
+        });
+      }
     }
   }
 
@@ -189,6 +204,10 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                 errorText:
                     _namaLengkapError.isNotEmpty ? _namaLengkapError : null,
                 enabled: _isEditing,
+                textCapitalization: TextCapitalization.words,
+                inputFormatters: [
+                  UpperCaseTextFormatter(),
+                ],
                 onChanged: (value) {
                   setState(() {
                     _namaLengkapError = '';
@@ -202,22 +221,34 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                 hintText: 'Masukan NIK',
                 errorText: _nikError.isNotEmpty ? _nikError : null,
                 enabled: _isEditing,
+                maxLength: 16,
+                keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  FilteringTextInputFormatter.deny(RegExp(r'[A-Za-z]')),
+                  LengthLimitingTextInputFormatter(16),
+                ],
                 onChanged: (value) {
+                  if (value.contains(RegExp(r'[A-Za-z]'))) {
+                    nikController.text = value.replaceAll(RegExp(r'[A-Za-z]'), '');
+                  }
                   setState(() {
                     _nikError = '';
                   });
                 },
               ),
               const SizedBox(height: 20),
-              CustomFormField(
-                controller: jenisKelaminController,
+              CustomDropdown(
                 labelText: 'Jenis Kelamin',
-                hintText: 'Masukan Jenis Kelamin',
+                hintText: 'Pilih Jenis Kelamin',
+                value: _selectedJenisKelamin,
+                items: _jenisKelaminItems,
                 errorText:
                     _jenisKelaminError.isNotEmpty ? _jenisKelaminError : null,
                 enabled: _isEditing,
-                onChanged: (value) {
+                onChanged: (String? newValue) {
                   setState(() {
+                    _selectedJenisKelamin = newValue ?? _selectedJenisKelamin;
                     _jenisKelaminError = '';
                   });
                 },
@@ -229,7 +260,17 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                 hintText: 'Masukan No HP',
                 errorText: _noHpError.isNotEmpty ? _noHpError : null,
                 enabled: _isEditing,
+                maxLength: 13,
+                keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  FilteringTextInputFormatter.deny(RegExp(r'[A-Za-z]')),
+                  LengthLimitingTextInputFormatter(13),
+                ],
                 onChanged: (value) {
+                  if (value.contains(RegExp(r'[A-Za-z]'))) {
+                    noHpController.text = value.replaceAll(RegExp(r'[A-Za-z]'), '');
+                  }
                   setState(() {
                     _noHpError = '';
                   });
@@ -242,6 +283,7 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                 hintText: 'Masukan Alamat Lengkap',
                 errorText: _alamatError.isNotEmpty ? _alamatError : null,
                 enabled: _isEditing,
+                maxLines: 3,
                 onChanged: (value) {
                   setState(() {
                     _alamatError = '';
@@ -255,7 +297,15 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                 hintText: 'Masukan Jumlah GH',
                 errorText: _jumlahGHError.isNotEmpty ? _jumlahGHError : null,
                 enabled: _isEditing,
+                keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  FilteringTextInputFormatter.deny(RegExp(r'[A-Za-z]')),
+                ],
                 onChanged: (value) {
+                  if (value.contains(RegExp(r'[A-Za-z]'))) {
+                    jumlahGHController.text = value.replaceAll(RegExp(r'[A-Za-z]'), '');
+                  }
                   setState(() {
                     _jumlahGHError = '';
                   });
@@ -298,14 +348,7 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 15.0),
                       ),
-                      onPressed: _isEditing
-                          ? () {
-                              // Implementasi fungsi save
-                              setState(() {
-                                _isEditing = false;
-                              });
-                            }
-                          : null,
+                      onPressed: _isEditing ? _validateInputs : null,
                       child: const Text(
                         'Save',
                         style: TextStyle(
@@ -330,10 +373,20 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
     // Dispose semua controller
     namaLengkapController.dispose();
     nikController.dispose();
-    jenisKelaminController.dispose();
     noHpController.dispose();
     alamatController.dispose();
     jumlahGHController.dispose();
     super.dispose();
+  }
+}
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
+    );
   }
 }

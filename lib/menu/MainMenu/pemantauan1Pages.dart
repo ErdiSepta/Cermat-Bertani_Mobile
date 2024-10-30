@@ -6,7 +6,6 @@ import 'package:apps/menu/MainMenu/pembudidayaanPages.dart';
 import 'package:apps/menu/MainMenu/tatacaraPemantauanPages.dart';
 import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
-import 'package:apps/src/bottomnav.dart';
 
 class Pemantauan1pages extends StatelessWidget {
   const Pemantauan1pages({super.key});

@@ -5,8 +5,9 @@ class CustomDropdown extends StatelessWidget {
   final String hintText;
   final String value;
   final List<String> items;
-  final Function(String?) onChanged;
-  final bool enabled;
+  final void Function(String?) onChanged;
+  final String? errorText;
+  final bool? enabled;
 
   const CustomDropdown({
     super.key,
@@ -15,7 +16,8 @@ class CustomDropdown extends StatelessWidget {
     required this.value,
     required this.items,
     required this.onChanged,
-    this.enabled = true,
+    this.errorText,
+    this.enabled,
   });
 
   @override
@@ -69,7 +71,7 @@ class CustomDropdown extends StatelessWidget {
                   ),
                 );
               }).toList(),
-              onChanged: enabled ? onChanged : null,
+              onChanged: enabled ?? true ? onChanged : null,
               style: const TextStyle(
                 fontSize: 14,
                 color: Colors.black,
@@ -82,6 +84,14 @@ class CustomDropdown extends StatelessWidget {
             ),
           ),
         ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              errorText!,
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
       ],
     );
   }

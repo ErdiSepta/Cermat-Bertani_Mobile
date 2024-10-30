@@ -4,7 +4,6 @@ import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customColor.dart';
 
-
 class Lupapassword1 extends StatefulWidget {
   const Lupapassword1({super.key});
 
@@ -18,7 +17,13 @@ class _Lupapassword1State extends State<Lupapassword1> {
 
   void _validateInputs() {
     setState(() {
-      _emailError = _emailController.text.isEmpty ? 'Email tidak boleh kosong' : '';
+      if (_emailController.text.isEmpty) {
+        _emailError = 'Email tidak boleh kosong';
+      } else if (!_emailController.text.contains('@gmail.com')) {
+        _emailError = 'Email Tidak Valid';
+      } else {
+        _emailError = '';
+      }
     });
 
     if (_emailError.isEmpty) {
@@ -32,17 +37,6 @@ class _Lupapassword1State extends State<Lupapassword1> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'Lupa Password',
-          style: TextStyle(
-            fontSize: 28,
-            color: Colors.black,
-            fontFamily: 'OdorMeanChey',
-          ),
-        ),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -65,7 +59,8 @@ class _Lupapassword1State extends State<Lupapassword1> {
                 Center(
                   child: Image.asset(
                     'assets/images/forgotpassword.png',
-                    height: 312, width: 312,
+                    height: 312,
+                    width: 312,
                   ),
                 ),
                 const SizedBox(height: 75),

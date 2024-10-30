@@ -5,6 +5,7 @@ import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:apps/src/autofilltext.dart';
+import 'package:apps/src/customConfirmDialog.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -100,19 +101,44 @@ class _RegisterState extends State<Register> {
     }
   }
 
-  void _validateInputs() {
+  void _validateInputs() async {
     setState(() {
-      _nikError = _nikController.text.isEmpty ? 'NIK tidak boleh kosong' : '';
-      _emailError =
-          _emailController.text.isEmpty ? 'Email tidak boleh kosong' : '';
+      // Validasi NIK
+      if (_nikController.text.isEmpty) {
+        _nikError = 'NIK tidak boleh kosong';
+      } else if (_nikController.text.length != 16) {
+        _nikError = 'NIK harus 16 digit';
+      } else {
+        _nikError = '';
+      }
+
+      // Validasi Email
+      if (_emailController.text.isEmpty) {
+        _emailError = 'Email tidak boleh kosong';
+      } else if (!_emailController.text.endsWith('@gmail.com')) {
+        _emailError = 'Email Tidak Valid';
+      } else {
+        _emailError = '';
+      }
+
+      // Validasi No HP
+      if (_noHpController.text.isEmpty) {
+        _noHpError = 'Nomor HP tidak boleh kosong';
+      } else if (!_noHpController.text.startsWith('08')) {
+        _noHpError = 'Nomor HP Tidak Valid';
+      } else if (_noHpController.text.length > 13) {
+        _noHpError = 'Nomor HP maksimal 13 digit';
+      } else {
+        _noHpError = '';
+      }
+
+      // Validasi lainnya
       _namaError =
           _namaController.text.isEmpty ? 'Nama tidak boleh kosong' : '';
       _alamatError =
           _alamatController.text.isEmpty ? 'Alamat tidak boleh kosong' : '';
       _genderError =
           _selectedGender == null ? 'Jenis kelamin harus dipilih' : '';
-      _noHpError =
-          _noHpController.text.isEmpty ? 'Nomor HP tidak boleh kosong' : '';
     });
 
     if (_nikError.isEmpty &&
@@ -121,8 +147,20 @@ class _RegisterState extends State<Register> {
         _alamatError.isEmpty &&
         _genderError.isEmpty &&
         _noHpError.isEmpty) {
-      Navigator.push(
-          context, SmoothPageTransition(page: const Register2()));
+      bool confirm = await CustomConfirmDialog.show(
+        context: context,
+        title: 'Konfirmasi',
+        message: 'Apakah data yang anda masukkan sudah benar?',
+        confirmText: 'Ya',
+        cancelText: 'Tidak',
+      );
+
+      if (confirm) {
+        Navigator.push(
+          context,
+          SmoothPageTransition(page: const Register2()),
+        );
+      }
     }
   }
 
@@ -171,6 +209,12 @@ class _RegisterState extends State<Register> {
                   labelText: 'Nomor Induk Kependudukan',
                   hintText: 'Masukan NIK Sesuai KTP',
                   errorText: _nikError.isNotEmpty ? _nikError : null,
+                  maxLength: 16,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(16),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 CustomFormField(
@@ -178,6 +222,7 @@ class _RegisterState extends State<Register> {
                   labelText: 'Email Pengguna',
                   hintText: 'Masukan Email Aktif Pengguna',
                   errorText: _emailError.isNotEmpty ? _emailError : null,
+                  keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 20),
                 CustomFormField(
@@ -185,6 +230,10 @@ class _RegisterState extends State<Register> {
                   labelText: 'Nama Lengkap Sesuai KTP',
                   hintText: 'Masukan Nama Lengkap Sesuai KTP',
                   errorText: _namaError.isNotEmpty ? _namaError : null,
+                  textCapitalization: TextCapitalization.words,
+                  inputFormatters: [
+                    UpperCaseTextFormatter(),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 const Text(
@@ -236,6 +285,12 @@ class _RegisterState extends State<Register> {
                   labelText: 'Nomor HP',
                   hintText: 'Masukkan Nomor HP',
                   errorText: _noHpError.isNotEmpty ? _noHpError : null,
+                  maxLength: 13,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(13),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 CustomFormField(
@@ -243,6 +298,7 @@ class _RegisterState extends State<Register> {
                   labelText: 'Alamat',
                   hintText: 'Masukkan Alamat Lengkap',
                   errorText: _alamatError.isNotEmpty ? _alamatError : null,
+                  maxLines: 3, // Membuat textfield lebih lebar
                 ),
                 const SizedBox(height: 50),
                 Center(

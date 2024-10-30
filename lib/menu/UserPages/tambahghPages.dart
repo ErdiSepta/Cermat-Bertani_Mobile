@@ -2,6 +2,7 @@ import 'package:apps/src/customFormfield.dart';
 import 'package:apps/src/topnav.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customColor.dart';
+import 'package:apps/src/customConfirmDialog.dart';
 
 class TambahghpagePages extends StatefulWidget {
   const TambahghpagePages({super.key});
@@ -17,12 +18,16 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
   String _fokusError = '';
   String _tanggalError = '';
   String _metodeError = '';
+  String _luasError = '';
+  String _lubangError = '';
 
   final namaController = TextEditingController();
   final alamatController = TextEditingController();
   final fokusController = TextEditingController();
   final tanggalController = TextEditingController();
   final metodeController = TextEditingController();
+  final luasController = TextEditingController();
+  final lubangController = TextEditingController();
 
   @override
   void initState() {
@@ -33,6 +38,8 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
     fokusController.addListener(() => _clearError('fokus'));
     tanggalController.addListener(() => _clearError('tanggal'));
     metodeController.addListener(() => _clearError('metode'));
+    luasController.addListener(() => _clearError('luas'));
+    lubangController.addListener(() => _clearError('lubang'));
   }
 
   void _clearError(String field) {
@@ -48,11 +55,15 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
           _tanggalError = '';
         case 'metode':
           _metodeError = '';
+        case 'luas':
+          _luasError = '';
+        case 'lubang':
+          _lubangError = '';
       }
     });
   }
 
-  void _validateInputs() {
+  void _validateInputs() async {
     setState(() {
       _namaError =
           namaController.text.isEmpty ? 'Nama GH tidak boleh kosong' : '';
@@ -65,32 +76,31 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
           tanggalController.text.isEmpty ? 'Tanggal tidak boleh kosong' : '';
       _metodeError =
           metodeController.text.isEmpty ? 'Metode tidak boleh kosong' : '';
+      _luasError = luasController.text.isEmpty ? 'Luas tidak boleh kosong' : '';
+      _lubangError =
+          lubangController.text.isEmpty ? 'Lubang tidak boleh kosong' : '';
     });
 
     if (_namaError.isEmpty &&
         _alamatError.isEmpty &&
         _fokusError.isEmpty &&
         _tanggalError.isEmpty &&
-        _metodeError.isEmpty) {
-      // Tampilkan dialog sukses
-      showDialog(
+        _metodeError.isEmpty &&
+        _luasError.isEmpty &&
+        _lubangError.isEmpty) {
+
+      // Tambahkan dialog konfirmasi
+      bool confirm = await CustomConfirmDialog.show(
         context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Sukses'),
-            content: const Text('Data GH berhasil disimpan'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.pop(context); // Kembali ke halaman sebelumnya
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
+        title: 'Konfirmasi',
+        message: 'Apakah data yang anda masukkan sudah benar?',
+        confirmText: 'Ya',
+        cancelText: 'Tidak',
       );
+
+      if (confirm) {
+        Navigator.pop(context); // Kembali ke halaman sebelumnya
+      }
     }
   }
 
@@ -140,6 +150,8 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
                         hintText: 'Masukan Alamat GH',
                         errorText:
                             _alamatError.isNotEmpty ? _alamatError : null,
+                        maxLines: 3,
+                        height: 100,
                         onChanged: (value) {
                           setState(() {
                             _alamatError = '';
@@ -189,6 +201,112 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
                             _metodeError = '';
                           });
                         },
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Update CustomFormField untuk Luas Greenhouse
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Luas Green House',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: 'NotoSanSemiBold',
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.35,
+                                child: TextField(
+                                  controller: luasController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                    hintText: 'Masukan Luas',
+                                    errorText: _luasError.isNotEmpty
+                                        ? _luasError
+                                        : null,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _luasError = '';
+                                    });
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'm² ( Meter Persegi )',
+                                style: TextStyle(
+                                  fontFamily: 'NotoSanSemiBold',
+                                  color: Colors.black54,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Update CustomFormField untuk Jumlah Lubang Tanam
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Jumlah Lubang Tanam',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: 'NotoSanSemiBold',
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.35,
+                                child: TextField(
+                                  controller: lubangController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                    hintText: 'Lubang Tanam',
+                                    errorText: _lubangError.isNotEmpty
+                                        ? _lubangError
+                                        : null,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _lubangError = '';
+                                    });
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Lubang Tanam',
+                                style: TextStyle(
+                                  fontFamily: 'NotoSanSemiBold',
+                                  color: Colors.black54,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 50),
                       Center(

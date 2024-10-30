@@ -4,7 +4,6 @@ import 'package:apps/menu/MainMenu/rekapPemantauanPages.dart';
 import 'package:apps/menu/MainMenu/rekapPembudidayaanPages.dart';
 import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
-import 'package:apps/src/bottomnav.dart';
 
 class Pendataan1pages extends StatelessWidget {
   const Pendataan1pages({super.key});

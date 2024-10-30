@@ -33,7 +33,7 @@ class Bottomnav extends StatelessWidget {
           currentIndex: currentIndex,
           onTap: (index) {
             // Tambahkan animasi fade pada perpindahan
-            PageStorage.of(context)?.writeState(context, index, identifier: 'bottom_nav_index');
+            PageStorage.of(context).writeState(context, index, identifier: 'bottom_nav_index');
             onTap(index);
           },
           type: BottomNavigationBarType.fixed,

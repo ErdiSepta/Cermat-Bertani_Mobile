@@ -13,6 +13,11 @@ class RekapPemantauanPages extends StatefulWidget {
 class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
   String? selectedGreenhouse;
   String? selectedJenisData;
+  String _greenhouseError = '';
+  String _jenisDataError = '';
+  String _tanggalAwalError = '';
+  String _tanggalAkhirError = '';
+
   final TextEditingController tanggalAwalController = TextEditingController();
   final TextEditingController tanggalAkhirController = TextEditingController();
 
@@ -31,7 +36,33 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
   final List<double> chartData = [4.5, 6.0, 3.5, 7.0, 2.5, 6.5, 2.0];
   final List<String> days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
-  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+  // Tambahkan data dummy untuk tabel
+  final List<Map<String, dynamic>> rekapData = [
+    {
+      'tanggal': '01/12/2024',
+      'ph': 6.5,
+      'ppm': 850,
+      'suhu': 28,
+      'kelembapan': 75,
+      'tinggiTanaman': 25,
+      'jumlahDaun': 8,
+      'beratBuah': 150
+    },
+    {
+      'tanggal': '02/12/2024',
+      'ph': 6.8,
+      'ppm': 900,
+      'suhu': 27,
+      'kelembapan': 78,
+      'tinggiTanaman': 27,
+      'jumlahDaun': 10,
+      'beratBuah': 180
+    },
+    // Tambahkan data dummy lainnya sesuai kebutuhan
+  ];
+
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -42,6 +73,43 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
       setState(() {
         controller.text = "${picked.day}/${picked.month}/${picked.year}";
       });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    tanggalAwalController.addListener(_clearTanggalAwalError);
+    tanggalAkhirController.addListener(_clearTanggalAkhirError);
+  }
+
+  // Clear error functions
+  void _clearTanggalAwalError() {
+    if (_tanggalAwalError.isNotEmpty) setState(() => _tanggalAwalError = '');
+  }
+
+  void _clearTanggalAkhirError() {
+    if (_tanggalAkhirError.isNotEmpty) setState(() => _tanggalAkhirError = '');
+  }
+
+  void _validateInputs() {
+    setState(() {
+      _greenhouseError =
+          selectedGreenhouse == null ? 'Greenhouse harus dipilih' : '';
+      _jenisDataError =
+          selectedJenisData == null ? 'Jenis data harus dipilih' : '';
+      _tanggalAwalError =
+          tanggalAwalController.text.isEmpty ? 'Tanggal awal harus diisi' : '';
+      _tanggalAkhirError = tanggalAkhirController.text.isEmpty
+          ? 'Tanggal akhir harus diisi'
+          : '';
+    });
+
+    if (_greenhouseError.isEmpty &&
+        _jenisDataError.isEmpty &&
+        _tanggalAwalError.isEmpty &&
+        _tanggalAkhirError.isEmpty) {
+      print('Semua data valid, siap untuk disimpan');
     }
   }
 
@@ -74,9 +142,12 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
                 hintText: 'Pilih Greenhouse',
                 value: selectedGreenhouse ?? greenhouseList[0],
                 items: greenhouseList,
+                errorText:
+                    _greenhouseError.isNotEmpty ? _greenhouseError : null,
                 onChanged: (String? newValue) {
                   setState(() {
                     selectedGreenhouse = newValue;
+                    _greenhouseError = '';
                   });
                 },
               ),
@@ -88,9 +159,11 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
                 hintText: 'Pilih Jenis Data',
                 value: selectedJenisData ?? jenisDataList[0],
                 items: jenisDataList,
+                errorText: _jenisDataError.isNotEmpty ? _jenisDataError : null,
                 onChanged: (String? newValue) {
                   setState(() {
                     selectedJenisData = newValue;
+                    _jenisDataError = '';
                   });
                 },
               ),
@@ -116,11 +189,15 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
                         hintText: 'Pilih Tanggal Awal',
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.calendar_today),
-                          onPressed: () => _selectDate(context, tanggalAwalController),
+                          onPressed: () =>
+                              _selectDate(context, tanggalAwalController),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
+                        errorText: _tanggalAwalError.isNotEmpty
+                            ? _tanggalAwalError
+                            : null,
                       ),
                       readOnly: true,
                     ),
@@ -138,11 +215,15 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
                         hintText: 'Pilih Tanggal Akhir',
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.calendar_today),
-                          onPressed: () => _selectDate(context, tanggalAkhirController),
+                          onPressed: () =>
+                              _selectDate(context, tanggalAkhirController),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
+                        errorText: _tanggalAkhirError.isNotEmpty
+                            ? _tanggalAkhirError
+                            : null,
                       ),
                       readOnly: true,
                     ),
@@ -183,8 +264,10 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
                           reservedSize: 30,
                         ),
                       ),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
                     ),
                     borderData: FlBorderData(show: false),
                     barGroups: chartData.asMap().entries.map((entry) {
@@ -207,13 +290,98 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
               ),
               const SizedBox(height: 30),
 
+              // Tabel
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    headingRowColor: WidgetStateProperty.all(Colors.blue[50]),
+                    columns: const [
+                      DataColumn(
+                        label: Text(
+                          'No',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Tanggal',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'PH',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'PPM',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Suhu (°C)',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Kelembapan (%)',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Tinggi Tanaman (cm)',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Jumlah Daun',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Berat Buah (gr)',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                    rows: rekapData.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final data = entry.value;
+                      return DataRow(
+                        cells: [
+                          DataCell(Text('${index + 1}')),
+                          DataCell(Text(data['tanggal'].toString())),
+                          DataCell(Text(data['ph'].toString())),
+                          DataCell(Text(data['ppm'].toString())),
+                          DataCell(Text(data['suhu'].toString())),
+                          DataCell(Text(data['kelembapan'].toString())),
+                          DataCell(Text(data['tinggiTanaman'].toString())),
+                          DataCell(Text(data['jumlahDaun'].toString())),
+                          DataCell(Text(data['beratBuah'].toString())),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
               // Tombol Print
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Implementasi fungsi print
-                  },
+                  onPressed: _validateInputs,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     padding: const EdgeInsets.symmetric(vertical: 15),
@@ -240,8 +408,8 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
 
   @override
   void dispose() {
-    tanggalAwalController.dispose();
-    tanggalAkhirController.dispose();
+    tanggalAwalController.removeListener(_clearTanggalAwalError);
+    tanggalAkhirController.removeListener(_clearTanggalAkhirError);
     super.dispose();
   }
 }

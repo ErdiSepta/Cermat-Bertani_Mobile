@@ -12,11 +12,22 @@ class RekapIsiPanenPages extends StatefulWidget {
 class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
   String? selectedGreenhouse;
   String? selectedJenisData;
+  String _greenhouseError = '';
+  String _jenisDataError = '';
+  String _tanggalAwalError = '';
+  String _tanggalAkhirError = '';
+
   final TextEditingController tanggalAwalController = TextEditingController();
   final TextEditingController tanggalAkhirController = TextEditingController();
 
-  final List<String> greenhouseList = ['GH-01', 'GH-02', 'GH-03'];
+  final List<String> greenhouseList = [
+    'Pilih Greenhouse',
+    'GH-01',
+    'GH-02',
+    'GH-03'
+  ];
   final List<String> jenisDataList = [
+    'Pilih Jenis Data',
     'Jumlah Panen',
     'Berat Panen',
     'Kualitas Panen'
@@ -50,7 +61,8 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
     },
   ];
 
-  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -61,6 +73,47 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
       setState(() {
         controller.text = "${picked.day}/${picked.month}/${picked.year}";
       });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    tanggalAwalController.addListener(_clearTanggalAwalError);
+    tanggalAkhirController.addListener(_clearTanggalAkhirError);
+  }
+
+  // Clear error functions
+  void _clearTanggalAwalError() {
+    if (_tanggalAwalError.isNotEmpty) {
+      setState(() => _tanggalAwalError = '');
+    }
+  }
+
+  void _clearTanggalAkhirError() {
+    if (_tanggalAkhirError.isNotEmpty) {
+      setState(() => _tanggalAkhirError = '');
+    }
+  }
+
+  void _validateInputs() {
+    setState(() {
+      _greenhouseError =
+          selectedGreenhouse == null ? 'Greenhouse harus dipilih' : '';
+      _jenisDataError =
+          selectedJenisData == null ? 'Jenis data harus dipilih' : '';
+      _tanggalAwalError =
+          tanggalAwalController.text.isEmpty ? 'Tanggal awal harus diisi' : '';
+      _tanggalAkhirError = tanggalAkhirController.text.isEmpty
+          ? 'Tanggal akhir harus diisi'
+          : '';
+    });
+
+    if (_greenhouseError.isEmpty &&
+        _jenisDataError.isEmpty &&
+        _tanggalAwalError.isEmpty &&
+        _tanggalAkhirError.isEmpty) {
+      print('Semua data valid, siap untuk disimpan');
     }
   }
 
@@ -93,9 +146,12 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
                 hintText: 'Pilih Greenhouse',
                 value: selectedGreenhouse ?? greenhouseList[0],
                 items: greenhouseList,
+                errorText:
+                    _greenhouseError.isNotEmpty ? _greenhouseError : null,
                 onChanged: (String? newValue) {
                   setState(() {
                     selectedGreenhouse = newValue;
+                    _greenhouseError = '';
                   });
                 },
               ),
@@ -107,9 +163,11 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
                 hintText: 'Pilih Jenis Data',
                 value: selectedJenisData ?? jenisDataList[0],
                 items: jenisDataList,
+                errorText: _jenisDataError.isNotEmpty ? _jenisDataError : null,
                 onChanged: (String? newValue) {
                   setState(() {
                     selectedJenisData = newValue;
+                    _jenisDataError = '';
                   });
                 },
               ),
@@ -135,11 +193,15 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
                         hintText: 'Pilih Tanggal Awal',
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.calendar_today),
-                          onPressed: () => _selectDate(context, tanggalAwalController),
+                          onPressed: () =>
+                              _selectDate(context, tanggalAwalController),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
+                        errorText: _tanggalAwalError.isNotEmpty
+                            ? _tanggalAwalError
+                            : null,
                       ),
                       readOnly: true,
                     ),
@@ -157,11 +219,15 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
                         hintText: 'Pilih Tanggal Akhir',
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.calendar_today),
-                          onPressed: () => _selectDate(context, tanggalAkhirController),
+                          onPressed: () =>
+                              _selectDate(context, tanggalAkhirController),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
+                        errorText: _tanggalAkhirError.isNotEmpty
+                            ? _tanggalAkhirError
+                            : null,
                       ),
                       readOnly: true,
                     ),
@@ -179,8 +245,14 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
-                    headingRowColor: MaterialStateProperty.all(Colors.blue[50]),
+                    headingRowColor: WidgetStateProperty.all(Colors.blue[50]),
                     columns: const [
+                      DataColumn(
+                        label: Text(
+                          'No',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
                       DataColumn(
                         label: Text(
                           'Tahun',
@@ -218,9 +290,12 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
                         ),
                       ),
                     ],
-                    rows: rekapData.map((data) {
+                    rows: rekapData.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final data = entry.value;
                       return DataRow(
                         cells: [
+                          DataCell(Text('${index + 1}')),
                           DataCell(Text(data['tahun'] ?? '')),
                           DataCell(Text(data['jumlahBerat'] ?? '')),
                           DataCell(Text(data['ukuranRata'] ?? '')),
@@ -240,9 +315,7 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Implementasi fungsi print
-                  },
+                  onPressed: _validateInputs,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     padding: const EdgeInsets.symmetric(vertical: 15),
@@ -269,8 +342,8 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
 
   @override
   void dispose() {
-    tanggalAwalController.dispose();
-    tanggalAkhirController.dispose();
+    tanggalAwalController.removeListener(_clearTanggalAwalError);
+    tanggalAkhirController.removeListener(_clearTanggalAkhirError);
     super.dispose();
   }
 }

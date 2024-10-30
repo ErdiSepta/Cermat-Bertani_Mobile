@@ -2,6 +2,8 @@ import 'package:apps/src/customFormfield.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/topnav.dart'; // Pastikan path import ini benar
 import 'package:apps/src/customColor.dart';
+import 'package:apps/src/customConfirmDialog.dart';
+import 'package:flutter/services.dart';
 
 class ProfilGHPage extends StatefulWidget {
   const ProfilGHPage({super.key});
@@ -12,7 +14,7 @@ class ProfilGHPage extends StatefulWidget {
 
 class _ProfilGHPageState extends State<ProfilGHPage> {
   // Inisialisasi _isEditing sebagai false di awal
-  bool _isEditing = false;  // Pastikan ini false
+  bool _isEditing = false; // Pastikan ini false
   String? _selectedGH;
   final List<String> _ghList = ['GH 1', 'GH 2', 'GH 3', 'GH 4'];
 
@@ -74,12 +76,30 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
     },
   };
 
+  DateTime? _selectedDate;
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        tanggalGHController.text =
+            "${picked.day}/${picked.month}/${picked.year}";
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _selectedGH = _ghList.first;
     _loadGHData(_selectedGH!);
-    
+
     // Tambahkan listeners untuk setiap controller
     namaGHController.addListener(() => _clearError('namaGH'));
     alamatGHController.addListener(() => _clearError('alamatGH'));
@@ -117,83 +137,85 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
   void _clearError(String field) {
     setState(() {
       switch (field) {
-        case 'namaGH': _namaGHError = '';
-        case 'alamatGH': _alamatGHError = '';
-        case 'fokusPertanian': _fokusPertanianError = '';
-        case 'tanggalGH': _tanggalGHError = '';
-        case 'metodePenanaman': _metodePenanamanError = '';
-        case 'luasGH': _luasGHError = '';
-        case 'jumlahPopulasi': _jumlahPopulasiError = '';
+        case 'namaGH':
+          _namaGHError = '';
+        case 'alamatGH':
+          _alamatGHError = '';
+        case 'fokusPertanian':
+          _fokusPertanianError = '';
+        case 'tanggalGH':
+          _tanggalGHError = '';
+        case 'metodePenanaman':
+          _metodePenanamanError = '';
+        case 'luasGH':
+          _luasGHError = '';
+        case 'jumlahPopulasi':
+          _jumlahPopulasiError = '';
       }
     });
   }
 
-  void _validateInputs() {
+  void _validateInputs() async {
     setState(() {
-      _namaGHError = namaGHController.text.isEmpty ? 'Nama GH tidak boleh kosong' : '';
-      _alamatGHError = alamatGHController.text.isEmpty ? 'Alamat GH tidak boleh kosong' : '';
-      _fokusPertanianError = fokusPertanianController.text.isEmpty ? 'Fokus Pertanian tidak boleh kosong' : '';
-      _tanggalGHError = tanggalGHController.text.isEmpty ? 'Tanggal GH tidak boleh kosong' : '';
-      _metodePenanamanError = metodePenanamanController.text.isEmpty ? 'Metode Penanaman tidak boleh kosong' : '';
-      _luasGHError = luasGHController.text.isEmpty ? 'Luas GH tidak boleh kosong' : '';
-      _jumlahPopulasiError = jumlahPopulasiController.text.isEmpty ? 'Jumlah Populasi tidak boleh kosong' : '';
+      _namaGHError =
+          namaGHController.text.isEmpty ? 'Nama GH tidak boleh kosong' : '';
+      _alamatGHError =
+          alamatGHController.text.isEmpty ? 'Alamat GH tidak boleh kosong' : '';
+      _fokusPertanianError = fokusPertanianController.text.isEmpty
+          ? 'Fokus Pertanian tidak boleh kosong'
+          : '';
+      _tanggalGHError = tanggalGHController.text.isEmpty
+          ? 'Tanggal GH tidak boleh kosong'
+          : '';
+      _metodePenanamanError = metodePenanamanController.text.isEmpty
+          ? 'Metode Penanaman tidak boleh kosong'
+          : '';
+      _luasGHError =
+          luasGHController.text.isEmpty ? 'Luas GH tidak boleh kosong' : '';
+      _jumlahPopulasiError = jumlahPopulasiController.text.isEmpty
+          ? 'Jumlah Populasi tidak boleh kosong'
+          : '';
     });
 
-    if ([_namaGHError, _alamatGHError, _fokusPertanianError, _tanggalGHError,
-         _metodePenanamanError, _luasGHError, _jumlahPopulasiError]
-        .every((error) => error.isEmpty)) {
-      showDialog(
+    if ([
+      _namaGHError,
+      _alamatGHError,
+      _fokusPertanianError,
+      _tanggalGHError,
+      _metodePenanamanError,
+      _luasGHError,
+      _jumlahPopulasiError
+    ].every((error) => error.isEmpty)) {
+      bool confirm = await CustomConfirmDialog.show(
         context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Sukses'),
-            content: const Text('Data GH berhasil disimpan'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _isEditing = false;
-                  });
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
+        title: 'Konfirmasi',
+        message: 'Apakah anda yakin ingin menyimpan perubahan?',
+        confirmText: 'Ya',
+        cancelText: 'Tidak',
       );
+
+      if (confirm) {
+        setState(() {
+          _isEditing = false;
+        });
+      }
     }
   }
 
-  void _deleteGH() {
-    // Implementasi fungsi hapus GH di sini
-    showDialog(
+  void _deleteGH() async {
+    bool confirm = await CustomConfirmDialog.show(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Konfirmasi"),
-          content: const Text("Apakah Anda yakin ingin menghapus GH ini?"),
-          actions: <Widget>[
-            TextButton(
-              child: const Text("Batal"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text("Hapus"),
-              onPressed: () {
-                // Logika penghapusan GH
-                print('GH $_selectedGH dihapus');
-                Navigator.of(context).pop();
-                // Kembali ke halaman sebelumnya setelah menghapus
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+      title: 'Konfirmasi',
+      message: 'Apakah anda yakin ingin menghapus GH ini?',
+      confirmText: 'Hapus',
+      cancelText: 'Batal',
     );
+
+    if (confirm) {
+      // Logika penghapusan GH
+      print('GH $_selectedGH dihapus');
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -233,12 +255,14 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
                   child: Text(value),
                 );
               }).toList(),
-              onChanged: _isEditing ? null : (String? newValue) {
-                setState(() {
-                  _selectedGH = newValue;
-                  _loadGHData(newValue!);  // Load data ketika GH dipilih
-                });
-              },
+              onChanged: _isEditing
+                  ? null
+                  : (String? newValue) {
+                      setState(() {
+                        _selectedGH = newValue;
+                        _loadGHData(newValue!); // Load data ketika GH dipilih
+                      });
+                    },
             ),
             const SizedBox(height: 20),
             CustomFormField(
@@ -260,6 +284,7 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
               hintText: 'Masukkan Alamat GH',
               errorText: _alamatGHError.isNotEmpty ? _alamatGHError : null,
               enabled: _isEditing,
+              maxLines: 3,
               onChanged: (value) {
                 setState(() {
                   _alamatGHError = '';
@@ -267,37 +292,28 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
               },
             ),
             const SizedBox(height: 20),
-            CustomFormField(
-              controller: fokusPertanianController,
-              labelText: 'Fokus Pertanian',
-              hintText: 'Masukkan Fokus Pertanian',
-              errorText: _fokusPertanianError.isNotEmpty ? _fokusPertanianError : null,
-              enabled: _isEditing,
-              onChanged: (value) {
-                setState(() {
-                  _fokusPertanianError = '';
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            CustomFormField(
-              controller: tanggalGHController,
-              labelText: 'Tanggal GH Dibuat',
-              hintText: 'Masukkan Tanggal GH Dibuat',
-              errorText: _tanggalGHError.isNotEmpty ? _tanggalGHError : null,
-              enabled: _isEditing,
-              onChanged: (value) {
-                setState(() {
-                  _tanggalGHError = '';
-                });
-              },
+            GestureDetector(
+              onTap: _isEditing ? () => _selectDate(context) : null,
+              child: AbsorbPointer(
+                child: CustomFormField(
+                  controller: tanggalGHController,
+                  labelText: 'Tanggal GH Dibuat',
+                  hintText: 'Pilih Tanggal',
+                  errorText:
+                      _tanggalGHError.isNotEmpty ? _tanggalGHError : null,
+                  enabled: _isEditing,
+                  suffixIcon: Icon(Icons.calendar_today),
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             CustomFormField(
               controller: metodePenanamanController,
               labelText: 'Metode Penanaman',
               hintText: 'Masukkan Metode Penanaman',
-              errorText: _metodePenanamanError.isNotEmpty ? _metodePenanamanError : null,
+              errorText: _metodePenanamanError.isNotEmpty
+                  ? _metodePenanamanError
+                  : null,
               enabled: _isEditing,
               onChanged: (value) {
                 setState(() {
@@ -306,30 +322,72 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
               },
             ),
             const SizedBox(height: 20),
-            CustomFormField(
-              controller: luasGHController,
-              labelText: 'Luas Green House',
-              hintText: 'Masukkan Luas Green House',
-              errorText: _luasGHError.isNotEmpty ? _luasGHError : null,
-              enabled: _isEditing,
-              onChanged: (value) {
-                setState(() {
-                  _luasGHError = '';
-                });
-              },
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: CustomFormField(
+                    controller: luasGHController,
+                    labelText: 'Luas Green House',
+                    hintText: 'Masukkan Luas',
+                    errorText: _luasGHError.isNotEmpty ? _luasGHError : null,
+                    enabled: _isEditing,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  flex: 1,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 20),
+                    child: Text(
+                      'm² (Meter Persegi)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontFamily: 'NotoSanSemiBold',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
-            CustomFormField(
-              controller: jumlahPopulasiController,
-              labelText: 'Jumlah Populasi Tanaman',
-              hintText: 'Masukkan Jumlah Populasi Tanaman',
-              errorText: _jumlahPopulasiError.isNotEmpty ? _jumlahPopulasiError : null,
-              enabled: _isEditing,
-              onChanged: (value) {
-                setState(() {
-                  _jumlahPopulasiError = '';
-                });
-              },
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: CustomFormField(
+                    controller: jumlahPopulasiController,
+                    labelText: 'Jumlah Populasi Tanaman',
+                    hintText: 'Masukkan Jumlah',
+                    errorText: _jumlahPopulasiError.isNotEmpty
+                        ? _jumlahPopulasiError
+                        : null,
+                    enabled: _isEditing,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  flex: 1,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 20),
+                    child: Text(
+                      'Lubang Tanam',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontFamily: 'NotoSanSemiBold',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 50),
             Row(

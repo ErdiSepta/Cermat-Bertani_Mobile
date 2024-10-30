@@ -15,6 +15,11 @@ class CustomFormField extends StatelessWidget {
   final Function(String)? onChanged;
   final TextStyle? style; // tambahkan parameter ini
   final bool enabled; // Tambahkan ini
+  final double? height; // Tambahkan properti height
+  final int? maxLines; // Tambahkan properti maxLines
+  final TextCapitalization? textCapitalization;
+  final String? Function(String)? validator;
+  final VoidCallback? onTap; // Tambahkan parameter ini
 
   const CustomFormField({
     super.key,
@@ -31,6 +36,11 @@ class CustomFormField extends StatelessWidget {
     this.onChanged,
     this.style, // tambahkan parameter ini
     this.enabled = true, // Tambahkan ini dengan nilai default true
+    this.height, // Tambahkan ini
+    this.maxLines = 1, // Tambahkan ini dengan default 1
+    this.textCapitalization,
+    this.validator,
+    this.onTap, // Tambahkan ini
   });
 
   @override
@@ -49,40 +59,45 @@ class CustomFormField extends StatelessWidget {
             ),
           ),
         if (labelText.isNotEmpty) const SizedBox(height: 10),
-        TextField(
-          controller: controller,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          textAlign: textAlign,
-          maxLength: maxLength,
-          onChanged: onChanged,
-          enabled: enabled, // Tambahkan ini
-          decoration: InputDecoration(
-            hintText: hintText,
-            counterText: '',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: Colors.black,
-                width: 1.0,
+        SizedBox(
+          height: height, // Tambahkan ini
+          child: TextField(
+            controller: controller,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            textAlign: textAlign,
+            maxLength: maxLength,
+            maxLines: maxLines, // Tambahkan ini
+            onChanged: onChanged,
+            enabled: enabled,
+            decoration: InputDecoration(
+              hintText: hintText,
+              counterText: '',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                  color: Colors.black,
+                  width: 1.0,
+                ),
               ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: Colors.black,
-                width: 1.0,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                  color: Colors.black,
+                  width: 1.0,
+                ),
               ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: Colors.black,
-                width: 1.0,
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                  color: Colors.black,
+                  width: 1.0,
+                ),
               ),
+              errorText: errorText,
+              suffixIcon: suffixIcon,
             ),
-            errorText: errorText,
-            suffixIcon: suffixIcon,
+            onTap: onTap, // Tambahkan ini
           ),
         ),
       ],
