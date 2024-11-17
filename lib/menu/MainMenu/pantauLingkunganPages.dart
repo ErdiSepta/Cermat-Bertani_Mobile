@@ -1,3 +1,5 @@
+import 'package:apps/SendApi/PantauLingkunganApi.dart';
+import 'package:apps/SendApi/ghApi.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:apps/src/customDropdown.dart';
@@ -12,14 +14,44 @@ class PantauLingkunganPages extends StatefulWidget {
 }
 
 class _PantauLingkunganPagesState extends State<PantauLingkunganPages> {
-  String? selectedGreenhouse;
+  //AWAL BACKEND
+  String? _selectedGH;
+  String? _idGH = "";
+  int? RealIDGH = 0;
+  List<String> _ghList = [];
+  void showDataGh() async {
+    final result = await ghApi.getDataGhNama();
+    if (result != null) {
+      print("result " + result.toString());
+      setState(() {
+        // Pastikan ini di dalam setState untuk memperbarui UI
+        _ghData = result['data_gh'];
+        _ghList = result['data_gh'].keys.toList();
+        _selectedGH = _ghList[0].toString();
+        print(_selectedGH);
+        if (_selectedGH != null) {
+          _loadGHData(_selectedGH!); // Panggil fungsi untuk memuat data GH
+        }
+      });
+    } else {
+      print("data kosong");
+    }
+  }
+
+  // Data dummy untuk setiap GH
+  Map<String, dynamic> _ghData = {};
+  void _loadGHData(String gh) {
+    final data = _ghData[gh];
+    // Menyimpan ID GH untuk kebutuhan lainnya
+    _idGH = data['uuid'];
+    RealIDGH = data['id_gh'];
+  }
+
+  //AKHIR BACKEND
   final TextEditingController phController = TextEditingController();
   final TextEditingController ppmController = TextEditingController();
   final TextEditingController suhuController = TextEditingController();
   final TextEditingController kelembapanController = TextEditingController();
-
-  // Daftar greenhouse (contoh)
-  final List<String> greenhouseList = ['GH-01', 'GH-02', 'GH-03'];
 
   // Tambahkan variabel untuk error messages
   String _phError = '';
@@ -31,6 +63,7 @@ class _PantauLingkunganPagesState extends State<PantauLingkunganPages> {
   @override
   void initState() {
     super.initState();
+    showDataGh();
     // Tambahkan listeners untuk clear error
     phController.addListener(_clearPhError);
     ppmController.addListener(_clearPpmError);
@@ -85,8 +118,9 @@ class _PantauLingkunganPagesState extends State<PantauLingkunganPages> {
       _phError = phController.text.isEmpty ? 'PH tidak boleh kosong' : '';
       _ppmError = ppmController.text.isEmpty ? 'PPM tidak boleh kosong' : '';
       _suhuError = suhuController.text.isEmpty ? 'Suhu tidak boleh kosong' : '';
-      _kelembapanError = kelembapanController.text.isEmpty ? 'Kelembapan tidak boleh kosong' : '';
-      _greenhouseError = selectedGreenhouse == null ? 'Greenhouse harus dipilih' : '';
+      _kelembapanError = kelembapanController.text.isEmpty
+          ? 'Kelembapan tidak boleh kosong'
+          : '';
     });
 
     if (_phError.isEmpty &&
@@ -94,7 +128,6 @@ class _PantauLingkunganPagesState extends State<PantauLingkunganPages> {
         _suhuError.isEmpty &&
         _kelembapanError.isEmpty &&
         _greenhouseError.isEmpty) {
-
       // Tambahkan dialog konfirmasi
       bool confirm = await CustomConfirmDialog.show(
         context: context,
@@ -105,9 +138,24 @@ class _PantauLingkunganPagesState extends State<PantauLingkunganPages> {
       );
 
       if (confirm) {
-        // Implementasi logika simpan jika semua validasi berhasil
-        print('Semua data valid, siap untuk disimpan');
-        Navigator.pop(context); // Kembali ke halaman sebelumnya
+        final result = await Pantaulingkunganapi.tambahPantanuLingkungan(
+            phController.text,
+            ppmController.text,
+            suhuController.text,
+            kelembapanController.text,
+            RealIDGH.toString());
+
+        if (result == null) {
+          print('Data kosong!!!');
+        } else if (result['status'] == "success") {
+          print('berhasil simpan');
+          Navigator.pop(context); // Kembali ke halaman sebelumnya
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Pengiriman data gagal: ${result['message']}')),
+          );
+        }
       }
     }
   }
@@ -134,18 +182,24 @@ class _PantauLingkunganPagesState extends State<PantauLingkunganPages> {
                 ),
               ),
               const SizedBox(height: 30),
-
-              // Dropdown Greenhouse
-              CustomDropdown(
-                labelText: 'Greenhouse',
-                hintText: 'Pilih Greenhouse',
-                value: selectedGreenhouse ?? greenhouseList[0],
-                items: greenhouseList,
-                errorText: _greenhouseError.isNotEmpty ? _greenhouseError : null,
+              DropdownButtonFormField<String>(
+                value: _selectedGH,
+                decoration: InputDecoration(
+                  labelText: 'Pilih Green House',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                items: _ghList.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    selectedGreenhouse = newValue;
-                    _clearGreenhouseError();
+                    _selectedGH = newValue;
+                    _loadGHData(newValue!); // Load data ketika GH dipilih
                   });
                 },
               ),
@@ -187,7 +241,8 @@ class _PantauLingkunganPagesState extends State<PantauLingkunganPages> {
                 labelText: 'Kelembapan Polibag',
                 hintText: 'Masukan Kelembapan Polibag',
                 keyboardType: TextInputType.number,
-                errorText: _kelembapanError.isNotEmpty ? _kelembapanError : null,
+                errorText:
+                    _kelembapanError.isNotEmpty ? _kelembapanError : null,
               ),
               const SizedBox(height: 30),
 

@@ -1,9 +1,17 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:apps/menu/UserPages/loginPages.dart';
+import 'package:http/http.dart' as http;
+import 'package:apps/SendApi/Server.dart';
+import 'package:apps/SendApi/ghApi.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/topnav.dart'; // Pastikan path import ini benar
 import 'package:apps/src/customColor.dart';
 import 'package:apps/src/customConfirmDialog.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfilGHPage extends StatefulWidget {
   const ProfilGHPage({super.key});
@@ -16,7 +24,26 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
   // Inisialisasi _isEditing sebagai false di awal
   bool _isEditing = false; // Pastikan ini false
   String? _selectedGH;
-  final List<String> _ghList = ['GH 1', 'GH 2', 'GH 3', 'GH 4'];
+  String? _idGH = "";
+  List<String> _ghList = [];
+
+  void _loadGHData(String gh) {
+    final data = _ghData[gh]; // Mengambil Sdata berdasarkan nama GH
+    // Menyesuaikan controller dengan data yang diterima
+    namaGHController.text = data['nama']!;
+    alamatGHController.text = data['alamat']!;
+    fokusPertanianController.text = data['fokus']!;
+    foto = data['foto']!;
+    tanggalGHController.text = formatTanggal(data['tanggal']!);
+    metodePenanamanController.text = data['metode']!;
+    luasGHController.text = data['luas'] == null ? "" : data['luas'];
+    jumlahPopulasiController.text =
+        data['populasi'] == null ? "" : data['populasi'];
+
+    // Menyimpan ID GH untuk kebutuhan lainnya
+    _idGH = data['uuid']; // Menyimpan ID Greenhouse
+    print("id gh : " + _idGH.toString());
+  }
 
   // Definisi controller untuk setiap field secara manual
   final namaGHController = TextEditingController();
@@ -35,46 +62,24 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
   String _metodePenanamanError = '';
   String _luasGHError = '';
   String _jumlahPopulasiError = '';
+  void showDataGh() async {
+    final result = await ghApi.getDataGh();
+    if (result != null) {
+      print(result['data_gh']);
+      _ghData = result['data_gh'];
+      _ghList = result['data_gh'].keys.toList();
+      _selectedGH = "GH 1";
+      _loadGHData(_selectedGH!);
+    } else {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Anda belum memiliki Green House!')),
+      );
+    }
+  }
 
   // Data dummy untuk setiap GH
-  final Map<String, Map<String, String>> _ghData = {
-    'GH 1': {
-      'nama': 'Green House 1',
-      'alamat': 'Jl. Raya No. 1',
-      'fokus': 'Sayuran',
-      'tanggal': '01/01/2022',
-      'metode': 'Hidroponik',
-      'luas': '100 m2',
-      'populasi': '1000'
-    },
-    'GH 2': {
-      'nama': 'Green House 2',
-      'alamat': 'Jl. Raya No. 2',
-      'fokus': 'Buah',
-      'tanggal': '02/02/2022',
-      'metode': 'Aeroponik',
-      'luas': '150 m2',
-      'populasi': '1500'
-    },
-    'GH 3': {
-      'nama': 'Green House 3',
-      'alamat': 'Jl. Raya No. 3',
-      'fokus': 'Herbal',
-      'tanggal': '03/03/2022',
-      'metode': 'NFT',
-      'luas': '200 m2',
-      'populasi': '2000'
-    },
-    'GH 4': {
-      'nama': 'Green House 4',
-      'alamat': 'Jl. Raya No. 4',
-      'fokus': 'Bunga',
-      'tanggal': '04/04/2022',
-      'metode': 'DFT',
-      'luas': '250 m2',
-      'populasi': '2500'
-    },
-  };
+  Map<String, dynamic> _ghData = {};
 
   DateTime? _selectedDate;
 
@@ -89,7 +94,7 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
       setState(() {
         _selectedDate = picked;
         tanggalGHController.text =
-            "${picked.day}/${picked.month}/${picked.year}";
+            "${picked.year}-${picked.month}-${picked.day}";
       });
     }
   }
@@ -97,8 +102,7 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
   @override
   void initState() {
     super.initState();
-    _selectedGH = _ghList.first;
-    _loadGHData(_selectedGH!);
+    showDataGh();
 
     // Tambahkan listeners untuk setiap controller
     namaGHController.addListener(() => _clearError('namaGH'));
@@ -110,15 +114,18 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
     jumlahPopulasiController.addListener(() => _clearError('jumlahPopulasi'));
   }
 
-  void _loadGHData(String gh) {
-    final data = _ghData[gh]!;
-    namaGHController.text = data['nama']!;
-    alamatGHController.text = data['alamat']!;
-    fokusPertanianController.text = data['fokus']!;
-    tanggalGHController.text = data['tanggal']!;
-    metodePenanamanController.text = data['metode']!;
-    luasGHController.text = data['luas']!;
-    jumlahPopulasiController.text = data['populasi']!;
+  String formatTanggal(String tgl) {
+    // Parse string tanggal ke dalam objek DateTime
+    DateTime tanggal = DateTime.parse(tgl);
+
+// Ambil tahun, bulan, dan tanggal
+    int tahun = tanggal.year;
+    int bulan = tanggal.month;
+    int hari = tanggal.day;
+
+// Jika ingin menampilkan dalam format yang lebih spesifik
+    String tanggalFormatted = '$tahun-$bulan-$hari';
+    return tanggalFormatted;
   }
 
   @override
@@ -196,6 +203,7 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
 
       if (confirm) {
         setState(() {
+          postDataToServer();
           _isEditing = false;
         });
       }
@@ -212,12 +220,169 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
     );
 
     if (confirm) {
-      // Logika penghapusan GH
-      print('GH $_selectedGH dihapus');
-      Navigator.of(context).pop();
+      final result = await ghApi.deleteDataGh(_idGH.toString());
+      print(_idGH);
+      print("result : " + result.toString());
+      if (result != null && result['data'] != null) {
+        Login.token = result['data'].toString();
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('Gagal menghapus green house : ${result?['message']}')),
+        );
+      }
     }
   }
 
+// awal backend
+
+  String foto = "";
+  final ImagePicker _picker = ImagePicker();
+  File? _profileImage;
+
+  String ImageSaatIni = "";
+  Future<void> getImage() async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+        ImageSaatIni = _encodeBase64(pickedFile.name);
+        print("GAMBAR : " + ImageSaatIni);
+      });
+    }
+  }
+
+  Future<void> postDataToServer() async {
+    // Persiapkan data yang akan dikirim
+    Map<String, dynamic> data = {
+      'id_gh': _idGH,
+      'nama_gh': namaGHController.text,
+      'fokus_gh': fokusPertanianController.text,
+      'metode_gh': metodePenanamanController.text,
+      'alamat_gh': alamatGHController.text,
+      'luasgh': luasGHController.text,
+      'populasi': jumlahPopulasiController.text,
+      'tanggal': tanggalGHController.text,
+      'foto_gh': ImageSaatIni,
+      'email': Login.email,
+    };
+
+    // Buat request POST ke URL server
+    Uri url = Server.urlLaravel("green-house/update");
+
+    try {
+      // Kirim request POST ke server
+      final response = await http.put(url,
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": Login.token
+          },
+          body: json.encode(data));
+
+      // Periksa kode status respons
+      if (response.statusCode == 200) {
+        final result = json.decode(response.body);
+        print(result['data']);
+        if (ImageSaatIni != null) {
+          _uploadImage();
+        }
+        // final decodedPayload = _parseJwt(jwtToken);
+
+        print('Data berhasil dikirim');
+      } else {
+        // Gagal mengirim
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Gagal mengirim data. keterangan : ${json.decode(response.body)['message']}')),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengirim data. keterangan : $error')),
+      );
+      print('Terjadi kesalahan1: ${url} ');
+      print('Terjadi kesalahan2: ${json.encode(data)} ');
+      print('Terjadi kesalahan3: $error ');
+    }
+  }
+
+  late http.MultipartRequest request;
+  Future<void> _uploadImage() async {
+    if (_profileImage == null) {
+      print("Foto kosong");
+      return;
+    }
+
+    // Menyiapkan request untuk mengunggah gambar ke server
+    var request = http.MultipartRequest(
+      'POST',
+      Server.urlLaravel("green-house/uploadFoto"), // Mengubah ke Uri.parse
+    );
+
+    // Menambahkan file gambar ke dalam request
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'image', // Nama field harus sesuai dengan API di Laravel
+        _profileImage!.path,
+        filename: ImageSaatIni,
+      ),
+    );
+
+    try {
+      // Mengirim request ke server
+      var response = await request.send();
+
+      // Menangani respons server
+      if (response.statusCode == 200) {
+        print('Gambar berhasil diunggah');
+      } else {
+        // Cetak isi respons untuk debug
+        String responseBody = await response.stream.bytesToString();
+        print('Terjadi kesalahan: Kode status: ${response.statusCode}');
+        print('Isi respons: $responseBody'); // Tampilkan seluruh isi respons
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Terjadi kesalahan saat mengunggah gambar\nKode: ${response.statusCode}',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Terjadi kesalahannn: $e");
+    }
+  }
+
+  static String _encodeBase64(String str) {
+    // Extract the file name without the extension
+    // Split the file path to get the file name and extension
+
+    List<String> nameParts = str.split('.');
+
+    // Separate the base name and the extension
+    String baseName = nameParts[0];
+    String extension = nameParts.length > 1 ? nameParts.last : "";
+
+    // Encode the base name in Base64
+    String encodedBaseName = base64Url.encode(utf8.encode(baseName));
+
+    // Limit the encoded result to a maximum of 50 characters
+    String truncatedEncodedBaseName = encodedBaseName.length > 30
+        ? encodedBaseName.substring(0, 30)
+        : encodedBaseName;
+
+    // Combine the encoded base name with the original extension
+    return extension.isNotEmpty
+        ? "$truncatedEncodedBaseName.$extension"
+        : truncatedEncodedBaseName;
+  }
+
+//akhir backend
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -233,11 +398,50 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
         child: Column(
           children: [
             Center(
-              child: Image.asset(
-                'assets/images/gh.png',
-                width: 200,
-                height: 200,
-                fit: BoxFit.contain,
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.transparent,
+                    child: ClipOval(
+                        child: _profileImage != null
+                            ? Image.file(
+                                _profileImage!,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              )
+                            : foto == ""
+                                ? Image.asset(
+                                    'assets/images/Logos Apps.png',
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.network(
+                                    Server.UrlImageGreenhouse(foto))),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: _isEditing ? getImage : null,
+                      child: Container(
+                        height: 30,
+                        width: 30,
+                        decoration: BoxDecoration(
+                          color: CustomColors.coklatMedium,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),
@@ -311,6 +515,21 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
               controller: metodePenanamanController,
               labelText: 'Metode Penanaman',
               hintText: 'Masukkan Metode Penanaman',
+              errorText: _metodePenanamanError.isNotEmpty
+                  ? _metodePenanamanError
+                  : null,
+              enabled: _isEditing,
+              onChanged: (value) {
+                setState(() {
+                  _metodePenanamanError = '';
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+            CustomFormField(
+              controller: fokusPertanianController,
+              labelText: 'Fokus Pertanian',
+              hintText: 'Masukkan Fokus Pertanian',
               errorText: _metodePenanamanError.isNotEmpty
                   ? _metodePenanamanError
                   : null,

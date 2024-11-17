@@ -1,4 +1,6 @@
+import 'package:apps/menu/Models/RegisterModels.dart';
 import 'package:apps/menu/UserPages/register3Pages.dart';
+import 'package:email_otp/email_otp.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customColor.dart';
 import 'dart:async';
@@ -6,8 +8,9 @@ import 'package:pinput/pinput.dart';
 import 'package:lottie/lottie.dart';
 
 class Register2 extends StatefulWidget {
-  const Register2({super.key});
+  final RegisterData registerData;
 
+  const Register2({super.key, required this.registerData});
   @override
   _Register2State createState() => _Register2State();
 }
@@ -17,19 +20,30 @@ class _Register2State extends State<Register2> {
   final focusNode = FocusNode();
   final formKey = GlobalKey<FormState>();
   String _otpError = '';
+  bool _isLoading = false;
   int _timerSeconds = 60;
   Timer? _timer;
   bool _isTimerRunning = true;
-  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    EmailOTP.config(
+      appName: 'CERTANI',
+      otpType: OTPType.numeric,
+      expiry: 50000,
+      emailTheme: EmailTheme.v3,
+      appEmail: 'me@rohitchouhan.com',
+      otpLength: 5,
+    );
     startTimer();
+    resendOTP(); // Kirim OTP pertama kali
   }
 
   @override
   void dispose() {
+    pinController.dispose();
+    focusNode.dispose();
     _timer?.cancel();
     super.dispose();
   }
@@ -47,35 +61,47 @@ class _Register2State extends State<Register2> {
     });
   }
 
-  void resendOTP() {
-    // Implementasi logika pengiriman ulang OTP
+  Future<void> resendOTP() async {
     setState(() {
       _timerSeconds = 60;
       _isTimerRunning = true;
     });
     startTimer();
+
+    bool sent = await EmailOTP.sendOTP(email: widget.registerData.email);
+    if (!sent) {
+      setState(() {
+        _otpError = 'Gagal mengirim OTP. Coba lagi nanti.';
+      });
+    }
   }
 
   bool isOTPFilled() {
     return pinController.text.length == 5;
   }
 
-  void validateOTP() {
+  void validateOTP() async {
+    bool isValid = await EmailOTP.verifyOTP(otp: pinController.text);
     setState(() {
-      if (pinController.text.length < 5) {
-        _otpError = 'Mohon isikan kode OTP yang dikirimkan ke email anda';
-      } else {
-        _otpError = '';
-        setState(() => _isLoading = true);
-        // Simulasi loading 2 detik
-        Future.delayed(const Duration(seconds: 2), () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const Register3()),
-          );
-        });
-      }
+      _otpError = isValid ? '' : 'Kode OTP salah atau tidak valid.';
     });
+    if (isValid) {
+      setState(() => _isLoading = true);
+      Future.delayed(const Duration(seconds: 2), () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => Register3(
+                    alamat: widget.registerData.alamat,
+                    email: widget.registerData.email,
+                    gender: widget.registerData.gender,
+                    nama: widget.registerData.nama,
+                    nik: widget.registerData.nik,
+                    noHp: widget.registerData.noHp,
+                  )),
+        );
+      });
+    }
   }
 
   @override

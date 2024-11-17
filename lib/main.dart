@@ -5,6 +5,7 @@ import 'package:apps/menu/MainMenu/pendataan1Pages.dart';
 import 'package:apps/splashscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/bottomnav.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -25,7 +26,7 @@ class MyApp extends StatelessWidget {
 
 class MainPage extends StatefulWidget {
   final int initialIndex;
-  
+
   const MainPage({super.key, this.initialIndex = 0});
 
   @override

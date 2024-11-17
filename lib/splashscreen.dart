@@ -1,7 +1,10 @@
+import 'package:apps/SendApi/userApi.dart';
+import 'package:apps/main.dart';
 import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
 import 'src/customColor.dart';
+
 class Splashscreen extends StatefulWidget {
   const Splashscreen({super.key});
 
@@ -9,7 +12,8 @@ class Splashscreen extends StatefulWidget {
   State<Splashscreen> createState() => _SplashscreenState();
 }
 
-class _SplashscreenState extends State<Splashscreen> with SingleTickerProviderStateMixin {
+class _SplashscreenState extends State<Splashscreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   int _currentIndex = 0;
 
@@ -28,11 +32,34 @@ class _SplashscreenState extends State<Splashscreen> with SingleTickerProviderSt
 
     // Logika navigasi
     Future.delayed(const Duration(seconds: 3), () {
-      // Ganti 'HomeScreen()' dengan halaman tujuan Anda
+      if (Login.email.isNotEmpty) {
+        showProfil();
+      } else {
+        Navigator.of(context).pushReplacement(
+          SmoothPageTransition(page: const Login()),
+        );
+      }
+    });
+  }
+
+  Future<void> showProfil() async {
+    final result = await UserApi.getProfil(Login.email);
+    if (result == null) {
       Navigator.of(context).pushReplacement(
         SmoothPageTransition(page: const Login()),
       );
-    });
+    } else if (result['status'] == "success") {
+      Navigator.of(context).pushReplacement(
+        SmoothPageTransition(page: const MainPage()),
+      );
+    } else if (result['status'] == "error" &&
+        result['message'] == "token error must login") {
+      Navigator.of(context).pushReplacement(
+        SmoothPageTransition(page: const Login()),
+      );
+    } else {
+      print("Kesalahan Server");
+    }
   }
 
   @override
@@ -48,7 +75,8 @@ class _SplashscreenState extends State<Splashscreen> with SingleTickerProviderSt
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/images/Logos Apps Splash.png', width: 180, height: 180),
+            Image.asset('assets/images/Logos Apps Splash.png',
+                width: 180, height: 180),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -59,7 +87,9 @@ class _SplashscreenState extends State<Splashscreen> with SingleTickerProviderSt
                   height: 10,
                   width: 10,
                   decoration: BoxDecoration(
-                    color: _currentIndex == index ?  CustomColors.BiruPrimary: CustomColors.abupudar,
+                    color: _currentIndex == index
+                        ? CustomColors.BiruPrimary
+                        : CustomColors.abupudar,
                     shape: BoxShape.circle,
                   ),
                 );

@@ -1,8 +1,15 @@
+import 'package:apps/SendApi/Server.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:apps/src/topnav.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customColor.dart';
 import 'package:apps/src/customConfirmDialog.dart';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:apps/menu/UserPages/loginPages.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 
 class TambahghpagePages extends StatefulWidget {
   const TambahghpagePages({super.key});
@@ -12,7 +19,174 @@ class TambahghpagePages extends StatefulWidget {
 }
 
 class _TambahghpagePagesState extends State<TambahghpagePages> {
-  // Tambahkan variabel error
+//awal backend
+  String foto = "";
+  final ImagePicker _picker = ImagePicker();
+  File? _profileImage;
+  String ImageSaatIni = "";
+  Future<void> getImage() async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+        ImageSaatIni = _encodeBase64(pickedFile.name);
+        print("GAMBAR : " + ImageSaatIni);
+      });
+    }
+  }
+
+  DateTime? _selectedDate;
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        tanggalController.text = "${picked.year}-${picked.month}-${picked.day}";
+      });
+    }
+  }
+
+  Future<void> postDataToServer() async {
+    // Persiapkan data yang akan dikirim
+    Map<String, dynamic> data = {
+      'nama_gh': namaController.text,
+      'fokus_gh': fokusController.text,
+      'metode_gh': metodeController.text,
+      'alamat_gh': alamatController.text,
+      'luasgh': luasController.text,
+      'populasi': lubangController.text,
+      'foto_gh': ImageSaatIni,
+      'email': Login.email,
+    };
+
+    // Buat request POST ke URL server
+    Uri url = Server.urlLaravel("green-house/tambah");
+
+    try {
+      // Kirim request POST ke server
+      final response = await http.post(url,
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": Login.token
+          },
+          body: json.encode(data));
+
+      // Periksa kode status respons
+      if (response.statusCode == 200) {
+        final result = json.decode(response.body);
+
+        print("token baru : " + result['data']);
+
+        _uploadImage();
+        Navigator.pop(context);
+        print('Data berhasil dikirim');
+      } else if (response.statusCode == 400) {
+        final result = json.decode(response.body);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Gagal mengirim data. keterangan : ${result['message']}')),
+        );
+      } else {
+        print('Terjadi kesalahan1: ${response.statusCode} ');
+        print('Terjadi kesalahan1: ${response.body} ');
+        print('Terjadi kesalahan2: ${json.encode(data)} ');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengirim data.')),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengirim data. keterangan : $error')),
+      );
+      print('Terjadi kesalahan1: ${url} ');
+      print('Terjadi kesalahan2: ${json.encode(data)} ');
+      print('Terjadi kesalahan3: $error ');
+    }
+  }
+
+  late http.MultipartRequest request;
+  Future<void> _uploadImage() async {
+    if (_profileImage == null) {
+      print("Foto kosong");
+      return;
+    }
+
+    // Menyiapkan request untuk mengunggah gambar ke server
+    var request = http.MultipartRequest(
+      'POST',
+      Server.urlLaravel("green-house/uploadFoto"), // Mengubah ke Uri.parse
+    );
+
+    // Menambahkan file gambar ke dalam request
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'image', // Nama field harus sesuai dengan API di Laravel
+        _profileImage!.path,
+        filename: ImageSaatIni,
+      ),
+    );
+
+    try {
+      // Mengirim request ke server
+      var response = await request.send();
+
+      // Menangani respons server
+      if (response.statusCode == 200) {
+        print('Gambar berhasil diunggah');
+      } else {
+        // Cetak isi respons untuk debug
+        String responseBody = await response.stream.bytesToString();
+        print('Terjadi kesalahan: Kode status: ${response.statusCode}');
+        print('Isi respons: $responseBody'); // Tampilkan seluruh isi respons
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Terjadi kesalahan saat mengunggah gambar\nKode: ${response.statusCode}',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Terjadi kesalahannn: $e");
+    }
+  }
+
+  static String _encodeBase64(String str) {
+    // Extract the file name without the extension
+    // Split the file path to get the file name and extension
+
+    List<String> nameParts = str.split('.');
+
+    // Separate the base name and the extension
+    String baseName = nameParts[0];
+    String extension = nameParts.length > 1 ? nameParts.last : "";
+
+    // Encode the base name in Base64
+    String encodedBaseName = base64Url.encode(utf8.encode(baseName));
+
+    // Limit the encoded result to a maximum of 50 characters
+    String truncatedEncodedBaseName = encodedBaseName.length > 30
+        ? encodedBaseName.substring(0, 30)
+        : encodedBaseName;
+
+    // Combine the encoded base name with the original extension
+    return extension.isNotEmpty
+        ? "$truncatedEncodedBaseName.$extension"
+        : truncatedEncodedBaseName;
+  }
+
+//akhir backend
+//  // Tambahkan variabel error
   String _namaError = '';
   String _alamatError = '';
   String _fokusError = '';
@@ -88,18 +262,24 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
         _metodeError.isEmpty &&
         _luasError.isEmpty &&
         _lubangError.isEmpty) {
-
       // Tambahkan dialog konfirmasi
-      bool confirm = await CustomConfirmDialog.show(
-        context: context,
-        title: 'Konfirmasi',
-        message: 'Apakah data yang anda masukkan sudah benar?',
-        confirmText: 'Ya',
-        cancelText: 'Tidak',
-      );
+      if (ImageSaatIni.isNotEmpty) {
+        bool confirm = await CustomConfirmDialog.show(
+          context: context,
+          title: 'Konfirmasi',
+          message: 'Apakah data yang anda masukkan sudah benar?',
+          confirmText: 'Ya',
+          cancelText: 'Tidak',
+        );
 
-      if (confirm) {
-        Navigator.pop(context); // Kembali ke halaman sebelumnya
+        if (confirm) {
+          postDataToServer();
+        }
+        // Kembali ke halaman sebelumnya
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gambar Green House harus di isi!')),
+        );
       }
     }
   }
@@ -123,9 +303,46 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
                     children: [
                       const SizedBox(height: 20),
                       Center(
-                        child: Image.asset(
-                          'assets/images/gh.png',
-                          height: 200,
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.transparent,
+                                child: ClipOval(
+                                    child: _profileImage != null
+                                        ? Image.file(
+                                            _profileImage!,
+                                            width: 100,
+                                            height: 100,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.asset(
+                                            'assets/images/Logos Apps.png',
+                                            width: 100,
+                                            height: 100,
+                                            fit: BoxFit.cover,
+                                          ))),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: getImage,
+                                child: Container(
+                                  height: 30,
+                                  width: 30,
+                                  decoration: BoxDecoration(
+                                    color: CustomColors.coklatMedium,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 50),
@@ -175,17 +392,18 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
                       const SizedBox(height: 20),
 
                       // Update CustomFormField untuk Tanggal
-                      CustomFormField(
-                        controller: tanggalController,
-                        labelText: 'Tanggal GH Dibuat',
-                        hintText: 'Masukan Tanggal GH Dibuat',
-                        errorText:
-                            _tanggalError.isNotEmpty ? _tanggalError : null,
-                        onChanged: (value) {
-                          setState(() {
-                            _tanggalError = '';
-                          });
-                        },
+                      GestureDetector(
+                        onTap: () => _selectDate(context),
+                        child: AbsorbPointer(
+                          child: CustomFormField(
+                            controller: tanggalController,
+                            labelText: 'Tanggal GH Dibuat',
+                            hintText: 'Pilih Tanggal',
+                            errorText:
+                                _tanggalError.isNotEmpty ? _tanggalError : null,
+                            suffixIcon: Icon(Icons.calendar_today),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 20),
 
@@ -262,7 +480,7 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Jumlah Lubang Tanam',
+                            'Jumlah Populasi Tanaman',
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.black,

@@ -1,3 +1,6 @@
+import 'package:intl/intl.dart';
+import 'package:apps/SendApi/ghApi.dart';
+import 'package:apps/SendApi/pembudidayaanApi.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:apps/src/customDropdown.dart';
@@ -12,7 +15,40 @@ class PembudidayaanPages extends StatefulWidget {
 }
 
 class _PembudidayaanPagesState extends State<PembudidayaanPages> {
-  String? selectedGreenhouse;
+  //AWAL BACKEND
+  String? _selectedGH;
+  String? _idGH = "";
+  int? RealIDGH = 0;
+  List<String> _ghList = [];
+  void showDataGh() async {
+    final result = await ghApi.getDataGhNama();
+    if (result != null) {
+      print("result " + result.toString());
+      setState(() {
+        // Pastikan ini di dalam setState untuk memperbarui UI
+        _ghData = result['data_gh'];
+        _ghList = result['data_gh'].keys.toList();
+        _selectedGH = _ghList[0].toString();
+        print(_selectedGH);
+        if (_selectedGH != null) {
+          _loadGHData(_selectedGH!); // Panggil fungsi untuk memuat data GH
+        }
+      });
+    } else {
+      print("data kosong");
+    }
+  }
+
+  // Data dummy untuk setiap GH
+  Map<String, dynamic> _ghData = {};
+  void _loadGHData(String gh) {
+    final data = _ghData[gh];
+    // Menyimpan ID GH untuk kebutuhan lainnya
+    _idGH = data['uuid'];
+    RealIDGH = data['id_gh'];
+  }
+
+  //AKHIR BACKEND
   String _greenhouseError = '';
   String _perendamanAwalError = '';
   String _perendamanAkhirError = '';
@@ -23,19 +59,25 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
   String _penyiramanAwalError = '';
   String _penyiramanAkhirError = '';
 
-  final List<String> greenhouseList = ['GH-01', 'GH-02', 'GH-03'];
-  
+  final List<String> greenhouseList = [];
+
   // Controllers untuk tanggal
-  final TextEditingController perendamanAwalController = TextEditingController();
-  final TextEditingController perendamanAkhirController = TextEditingController();
+  final TextEditingController perendamanAwalController =
+      TextEditingController();
+  final TextEditingController perendamanAkhirController =
+      TextEditingController();
   final TextEditingController semaiAwalController = TextEditingController();
   final TextEditingController semaiAkhirController = TextEditingController();
   final TextEditingController vegetatifAwalController = TextEditingController();
-  final TextEditingController vegetatifAkhirController = TextEditingController();
-  final TextEditingController penyiramanAwalController = TextEditingController();
-  final TextEditingController penyiramanAkhirController = TextEditingController();
+  final TextEditingController vegetatifAkhirController =
+      TextEditingController();
+  final TextEditingController penyiramanAwalController =
+      TextEditingController();
+  final TextEditingController penyiramanAkhirController =
+      TextEditingController();
 
-  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -44,7 +86,8 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
     );
     if (picked != null) {
       setState(() {
-        controller.text = "${picked.day}/${picked.month}/${picked.year}";
+        // Format tanggal dengan dua digit untuk bulan dan hari
+        controller.text = DateFormat('yyyy-MM-dd').format(picked);
       });
     }
   }
@@ -52,6 +95,7 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
   @override
   void initState() {
     super.initState();
+    showDataGh();
     perendamanAwalController.addListener(_clearPerendamanAwalError);
     perendamanAkhirController.addListener(_clearPerendamanAkhirError);
     semaiAwalController.addListener(_clearSemaiAwalError);
@@ -64,45 +108,112 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
 
   // Clear error functions
   void _clearPerendamanAwalError() {
-    if (_perendamanAwalError.isNotEmpty) setState(() => _perendamanAwalError = '');
+    if (_perendamanAwalError.isNotEmpty)
+      setState(() => _perendamanAwalError = '');
   }
+
   void _clearPerendamanAkhirError() {
-    if (_perendamanAkhirError.isNotEmpty) setState(() => _perendamanAkhirError = '');
+    if (_perendamanAkhirError.isNotEmpty)
+      setState(() => _perendamanAkhirError = '');
   }
+
   void _clearSemaiAwalError() {
     if (_semaiAwalError.isNotEmpty) setState(() => _semaiAwalError = '');
   }
+
   void _clearSemaiAkhirError() {
     if (_semaiAkhirError.isNotEmpty) setState(() => _semaiAkhirError = '');
   }
+
   void _clearVegetatifAwalError() {
-    if (_vegetatifAwalError.isNotEmpty) setState(() => _vegetatifAwalError = '');
+    if (_vegetatifAwalError.isNotEmpty)
+      setState(() => _vegetatifAwalError = '');
   }
+
   void _clearVegetatifAkhirError() {
-    if (_vegetatifAkhirError.isNotEmpty) setState(() => _vegetatifAkhirError = '');
+    if (_vegetatifAkhirError.isNotEmpty)
+      setState(() => _vegetatifAkhirError = '');
   }
+
   void _clearPenyiramanAwalError() {
-    if (_penyiramanAwalError.isNotEmpty) setState(() => _penyiramanAwalError = '');
+    if (_penyiramanAwalError.isNotEmpty)
+      setState(() => _penyiramanAwalError = '');
   }
+
   void _clearPenyiramanAkhirError() {
-    if (_penyiramanAkhirError.isNotEmpty) setState(() => _penyiramanAkhirError = '');
+    if (_penyiramanAkhirError.isNotEmpty)
+      setState(() => _penyiramanAkhirError = '');
+  }
+
+// Fungsi untuk memeriksa apakah format tanggal valid
+  bool _isInvalidDateFormat(String date) {
+    try {
+      DateTime.parse(date); // Coba untuk parsing
+      return false; // Jika sukses, berarti formatnya valid
+    } catch (e) {
+      return true; // Jika terjadi error, berarti formatnya invalid
+    }
   }
 
   void _validateInputs() async {
     setState(() {
-      _greenhouseError = selectedGreenhouse == null ? 'Greenhouse harus dipilih' : '';
-      _perendamanAwalError = perendamanAwalController.text.isEmpty ? 'Tanggal awal perendaman harus diisi' : '';
-      _perendamanAkhirError = perendamanAkhirController.text.isEmpty ? 'Tanggal akhir perendaman harus diisi' : '';
-      _semaiAwalError = semaiAwalController.text.isEmpty ? 'Tanggal awal semai harus diisi' : '';
-      _semaiAkhirError = semaiAkhirController.text.isEmpty ? 'Tanggal akhir semai harus diisi' : '';
-      _vegetatifAwalError = vegetatifAwalController.text.isEmpty ? 'Tanggal awal vegetatif harus diisi' : '';
-      _vegetatifAkhirError = vegetatifAkhirController.text.isEmpty ? 'Tanggal akhir vegetatif harus diisi' : '';
-      _penyiramanAwalError = penyiramanAwalController.text.isEmpty ? 'Tanggal awal penyiraman harus diisi' : '';
-      _penyiramanAkhirError = penyiramanAkhirController.text.isEmpty ? 'Tanggal akhir penyiraman harus diisi' : '';
+      _greenhouseError = ''; // Reset error jika ada
+
+      // Validasi untuk perendaman awal dan akhir
+      _perendamanAwalError = perendamanAwalController.text.isEmpty
+          ? 'Tanggal awal perendaman harus diisi'
+          : '';
+      _perendamanAkhirError = perendamanAkhirController.text.isEmpty
+          ? 'Tanggal akhir perendaman harus diisi'
+          : _isInvalidDateFormat(perendamanAkhirController.text)
+              ? 'Format tanggal akhir perendaman tidak valid'
+              : DateTime.parse(perendamanAkhirController.text)
+                      .isBefore(DateTime.parse(perendamanAwalController.text))
+                  ? 'Tanggal akhir perendaman tidak boleh sebelum tanggal awal'
+                  : '';
+
+      // Validasi untuk semai awal dan akhir
+      _semaiAwalError = semaiAwalController.text.isEmpty
+          ? 'Tanggal awal semai harus diisi'
+          : '';
+      _semaiAkhirError = semaiAkhirController.text.isEmpty
+          ? 'Tanggal akhir semai harus diisi'
+          : _isInvalidDateFormat(semaiAkhirController.text)
+              ? 'Format tanggal akhir semai tidak valid'
+              : DateTime.parse(semaiAkhirController.text)
+                      .isBefore(DateTime.parse(semaiAwalController.text))
+                  ? 'Tanggal akhir semai tidak boleh sebelum tanggal awal'
+                  : '';
+
+      // Validasi untuk vegetatif awal dan akhir
+      _vegetatifAwalError = vegetatifAwalController.text.isEmpty
+          ? 'Tanggal awal vegetatif harus diisi'
+          : '';
+      _vegetatifAkhirError = vegetatifAkhirController.text.isEmpty
+          ? 'Tanggal akhir vegetatif harus diisi'
+          : _isInvalidDateFormat(vegetatifAkhirController.text)
+              ? 'Format tanggal akhir vegetatif tidak valid'
+              : DateTime.parse(vegetatifAkhirController.text)
+                      .isBefore(DateTime.parse(vegetatifAwalController.text))
+                  ? 'Tanggal akhir vegetatif tidak boleh sebelum tanggal awal'
+                  : '';
+
+      // Validasi untuk penyiraman awal dan akhir
+      _penyiramanAwalError = penyiramanAwalController.text.isEmpty
+          ? 'Tanggal awal penyiraman harus diisi'
+          : '';
+      _penyiramanAkhirError = penyiramanAkhirController.text.isEmpty
+          ? 'Tanggal akhir penyiraman harus diisi'
+          : _isInvalidDateFormat(penyiramanAkhirController.text)
+              ? 'Format tanggal akhir penyiraman tidak valid'
+              : DateTime.parse(penyiramanAkhirController.text)
+                      .isBefore(DateTime.parse(penyiramanAwalController.text))
+                  ? 'Tanggal akhir penyiraman tidak boleh sebelum tanggal awal'
+                  : '';
     });
 
-    if (_greenhouseError.isEmpty && 
-        _perendamanAwalError.isEmpty && 
+    if (_greenhouseError.isEmpty &&
+        _perendamanAwalError.isEmpty &&
         _perendamanAkhirError.isEmpty &&
         _semaiAwalError.isEmpty &&
         _semaiAkhirError.isEmpty &&
@@ -110,7 +221,6 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
         _vegetatifAkhirError.isEmpty &&
         _penyiramanAwalError.isEmpty &&
         _penyiramanAkhirError.isEmpty) {
-
       bool confirm = await CustomConfirmDialog.show(
         context: context,
         title: 'Konfirmasi',
@@ -120,8 +230,29 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
       );
 
       if (confirm) {
-        print('Semua data valid, siap untuk disimpan');
-        Navigator.pop(context);
+        final result = await PembudidayaanApi.tambahPembudidayaan(
+            perendamanAwalController.text,
+            perendamanAkhirController.text,
+            semaiAwalController.text,
+            semaiAkhirController.text,
+            vegetatifAwalController.text,
+            vegetatifAkhirController.text,
+            penyiramanAwalController.text,
+            penyiramanAkhirController.text,
+            _idGH.toString());
+
+        if (result == null) {
+          print(result);
+          print('Data kosong!!!');
+        } else if (result['status'] == "success") {
+          print('berhasil simpan');
+          Navigator.pop(context); // Kembali ke halaman sebelumnya
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Pengiriman data gagal: ${result['message']}')),
+          );
+        }
       }
     }
   }
@@ -148,18 +279,25 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
                 ),
               ),
               const SizedBox(height: 30),
-
-              // Greenhouse Dropdown
-              CustomDropdown(
-                labelText: 'Greenhouse',
-                hintText: 'Pilih Greenhouse',
-                value: selectedGreenhouse ?? greenhouseList[0],
-                items: greenhouseList,
-                errorText: _greenhouseError.isNotEmpty ? _greenhouseError : null,
+              // Dropdown Greenhouse
+              DropdownButtonFormField<String>(
+                value: _selectedGH,
+                decoration: InputDecoration(
+                  labelText: 'Pilih Green House',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                items: _ghList.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    selectedGreenhouse = newValue;
-                    _greenhouseError = '';
+                    _selectedGH = newValue;
+                    _loadGHData(newValue!); // Load data ketika GH dipilih
                   });
                 },
               ),
@@ -180,14 +318,17 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
                   const SizedBox(width: 60, child: Text('Awal')),
                   Expanded(
                     child: CustomFormField(
+                      onTap: () =>
+                          _selectDate(context, perendamanAwalController),
                       controller: perendamanAwalController,
                       labelText: '',
                       hintText: 'Pilih Tanggal Awal Fase',
-                      errorText: _perendamanAwalError.isNotEmpty ? _perendamanAwalError : null,
+                      errorText: _perendamanAwalError.isNotEmpty
+                          ? _perendamanAwalError
+                          : null,
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.calendar_today),
-                        onPressed: () => _selectDate(context, perendamanAwalController),
-                      ),
+                          icon: const Icon(Icons.calendar_today),
+                          onPressed: null),
                       enabled: true,
                     ),
                   ),
@@ -199,14 +340,17 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
                   const SizedBox(width: 60, child: Text('Akhir')),
                   Expanded(
                     child: CustomFormField(
+                      onTap: () =>
+                          _selectDate(context, perendamanAkhirController),
                       controller: perendamanAkhirController,
                       labelText: '',
                       hintText: 'Pilih Tanggal Akhir Fase',
-                      errorText: _perendamanAkhirError.isNotEmpty ? _perendamanAkhirError : null,
+                      errorText: _perendamanAkhirError.isNotEmpty
+                          ? _perendamanAkhirError
+                          : null,
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.calendar_today),
-                        onPressed: () => _selectDate(context, perendamanAkhirController),
-                      ),
+                          icon: const Icon(Icons.calendar_today),
+                          onPressed: null),
                       enabled: true,
                     ),
                   ),
@@ -229,13 +373,15 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
                   const SizedBox(width: 60, child: Text('Awal')),
                   Expanded(
                     child: CustomFormField(
+                      onTap: () => _selectDate(context, semaiAwalController),
                       controller: semaiAwalController,
                       labelText: '',
                       hintText: 'Pilih Tanggal Awal Fase',
-                      errorText: _semaiAwalError.isNotEmpty ? _semaiAwalError : null,
+                      errorText:
+                          _semaiAwalError.isNotEmpty ? _semaiAwalError : null,
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.calendar_today),
-                        onPressed: () => _selectDate(context, semaiAwalController),
+                        onPressed: null,
                       ),
                       enabled: true,
                     ),
@@ -248,14 +394,15 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
                   const SizedBox(width: 60, child: Text('Akhir')),
                   Expanded(
                     child: CustomFormField(
+                      onTap: () => _selectDate(context, semaiAkhirController),
                       controller: semaiAkhirController,
                       labelText: '',
                       hintText: 'Pilih Tanggal Akhir Fase',
-                      errorText: _semaiAkhirError.isNotEmpty ? _semaiAkhirError : null,
+                      errorText:
+                          _semaiAkhirError.isNotEmpty ? _semaiAkhirError : null,
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.calendar_today),
-                        onPressed: () => _selectDate(context, semaiAkhirController),
-                      ),
+                          icon: const Icon(Icons.calendar_today),
+                          onPressed: null),
                       enabled: true,
                     ),
                   ),
@@ -278,14 +425,17 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
                   const SizedBox(width: 60, child: Text('Awal')),
                   Expanded(
                     child: CustomFormField(
+                      onTap: () =>
+                          _selectDate(context, vegetatifAwalController),
                       controller: vegetatifAwalController,
                       labelText: '',
                       hintText: 'Pilih Tanggal Awal Fase',
-                      errorText: _vegetatifAwalError.isNotEmpty ? _vegetatifAwalError : null,
+                      errorText: _vegetatifAwalError.isNotEmpty
+                          ? _vegetatifAwalError
+                          : null,
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.calendar_today),
-                        onPressed: () => _selectDate(context, vegetatifAwalController),
-                      ),
+                          icon: const Icon(Icons.calendar_today),
+                          onPressed: null),
                       enabled: true,
                     ),
                   ),
@@ -297,13 +447,17 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
                   const SizedBox(width: 60, child: Text('Akhir')),
                   Expanded(
                     child: CustomFormField(
+                      onTap: () =>
+                          _selectDate(context, vegetatifAkhirController),
                       controller: vegetatifAkhirController,
                       labelText: '',
                       hintText: 'Pilih Tanggal Akhir Fase',
-                      errorText: _vegetatifAkhirError.isNotEmpty ? _vegetatifAkhirError : null,
+                      errorText: _vegetatifAkhirError.isNotEmpty
+                          ? _vegetatifAkhirError
+                          : null,
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.calendar_today),
-                        onPressed: () => _selectDate(context, vegetatifAkhirController),
+                        onPressed: null,
                       ),
                       enabled: true,
                     ),
@@ -327,14 +481,17 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
                   const SizedBox(width: 60, child: Text('Awal')),
                   Expanded(
                     child: CustomFormField(
+                      onTap: () =>
+                          _selectDate(context, penyiramanAwalController),
                       controller: penyiramanAwalController,
                       labelText: '',
                       hintText: 'Pilih Tanggal Awal Fase',
-                      errorText: _penyiramanAwalError.isNotEmpty ? _penyiramanAwalError : null,
+                      errorText: _penyiramanAwalError.isNotEmpty
+                          ? _penyiramanAwalError
+                          : null,
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.calendar_today),
-                        onPressed: () => _selectDate(context, penyiramanAwalController),
-                      ),
+                          icon: const Icon(Icons.calendar_today),
+                          onPressed: null),
                       enabled: true,
                     ),
                   ),
@@ -346,14 +503,17 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
                   const SizedBox(width: 60, child: Text('Akhir')),
                   Expanded(
                     child: CustomFormField(
+                      onTap: () =>
+                          _selectDate(context, penyiramanAkhirController),
                       controller: penyiramanAkhirController,
                       labelText: '',
                       hintText: 'Pilih Tanggal Akhir Fase',
-                      errorText: _penyiramanAkhirError.isNotEmpty ? _penyiramanAkhirError : null,
+                      errorText: _penyiramanAkhirError.isNotEmpty
+                          ? _penyiramanAkhirError
+                          : null,
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.calendar_today),
-                        onPressed: () => _selectDate(context, penyiramanAkhirController),
-                      ),
+                          icon: const Icon(Icons.calendar_today),
+                          onPressed: null),
                       enabled: true,
                     ),
                   ),

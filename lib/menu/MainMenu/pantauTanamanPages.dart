@@ -1,4 +1,6 @@
+import 'package:apps/SendApi/PantauTanamanApi.dart';
 import 'package:flutter/material.dart';
+import 'package:apps/SendApi/ghApi.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:apps/src/customDropdown.dart';
 import 'package:apps/src/topnav.dart';
@@ -12,8 +14,40 @@ class PantauTanamanPages extends StatefulWidget {
 }
 
 class _PantauTanamanPagesState extends State<PantauTanamanPages> {
-  String? selectedGreenhouse;
-  String _greenhouseError = '';
+  //AWAL BACKEND
+  String? _selectedGH;
+  String? _idGH = "";
+  int? RealIDGH = 0;
+  List<String> _ghList = [];
+  void showDataGh() async {
+    final result = await ghApi.getDataGhNama();
+    if (result != null) {
+      print("result " + result.toString());
+      setState(() {
+        // Pastikan ini di dalam setState untuk memperbarui UI
+        _ghData = result['data_gh'];
+        _ghList = result['data_gh'].keys.toList();
+        _selectedGH = _ghList[0].toString();
+        print(_selectedGH);
+        if (_selectedGH != null) {
+          _loadGHData(_selectedGH!); // Panggil fungsi untuk memuat data GH
+        }
+      });
+    } else {
+      print("data kosong");
+    }
+  }
+
+  // Data dummy untuk setiap GH
+  Map<String, dynamic> _ghData = {};
+  void _loadGHData(String gh) {
+    final data = _ghData[gh];
+    // Menyimpan ID GH untuk kebutuhan lainnya
+    _idGH = data['uuid'];
+    RealIDGH = data['id_gh'];
+  }
+
+  //AKHIR BACKEND
   String _tinggiError = '';
   String _jumlahDaunError = '';
   String _beratBuahError = '';
@@ -21,12 +55,10 @@ class _PantauTanamanPagesState extends State<PantauTanamanPages> {
   final TextEditingController jumlahDaunController = TextEditingController();
   final TextEditingController beratBuahController = TextEditingController();
 
-  // Daftar greenhouse (contoh)
-  final List<String> greenhouseList = ['GH-01', 'GH-02', 'GH-03'];
-
   @override
   void initState() {
     super.initState();
+    showDataGh();
     tinggiController.addListener(_clearTinggiError);
     jumlahDaunController.addListener(_clearJumlahDaunError);
     beratBuahController.addListener(_clearBeratBuahError);
@@ -52,17 +84,20 @@ class _PantauTanamanPagesState extends State<PantauTanamanPages> {
 
   void _validateInputs() async {
     setState(() {
-      _tinggiError = tinggiController.text.isEmpty ? 'Tinggi tanaman tidak boleh kosong' : '';
-      _jumlahDaunError = jumlahDaunController.text.isEmpty ? 'Jumlah daun tidak boleh kosong' : '';
-      _beratBuahError = beratBuahController.text.isEmpty ? 'Berat buah tidak boleh kosong' : '';
-      _greenhouseError = selectedGreenhouse == null ? 'Greenhouse harus dipilih' : '';
+      _tinggiError = tinggiController.text.isEmpty
+          ? 'Tinggi tanaman tidak boleh kosong'
+          : '';
+      _jumlahDaunError = jumlahDaunController.text.isEmpty
+          ? 'Jumlah daun tidak boleh kosong'
+          : '';
+      _beratBuahError = beratBuahController.text.isEmpty
+          ? 'Berat buah tidak boleh kosong'
+          : '';
     });
 
-    if (_tinggiError.isEmpty && 
-        _jumlahDaunError.isEmpty && 
-        _beratBuahError.isEmpty && 
-        _greenhouseError.isEmpty) {
-
+    if (_tinggiError.isEmpty &&
+        _jumlahDaunError.isEmpty &&
+        _beratBuahError.isEmpty) {
       bool confirm = await CustomConfirmDialog.show(
         context: context,
         title: 'Konfirmasi',
@@ -72,8 +107,23 @@ class _PantauTanamanPagesState extends State<PantauTanamanPages> {
       );
 
       if (confirm) {
-        print('Semua data valid, siap untuk disimpan');
-        Navigator.pop(context);
+        final result = await PantauTanamanApi.tambahPantauTanaman(
+            tinggiController.text,
+            jumlahDaunController.text,
+            beratBuahController.text,
+            _idGH.toString());
+
+        if (result == null) {
+          print('Data kosong!!!');
+        } else if (result['status'] == "success") {
+          print('berhasil simpan');
+          Navigator.pop(context); // Kembali ke halaman sebelumnya
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Pengiriman data gagal: ${result['message']}')),
+          );
+        }
       }
     }
   }
@@ -102,17 +152,24 @@ class _PantauTanamanPagesState extends State<PantauTanamanPages> {
               const SizedBox(height: 30),
 
               // Dropdown Greenhouse
-              CustomDropdown(
-                labelText: 'Greenhouse',
-                hintText: 'Pilih Greenhouse',
-                value: selectedGreenhouse ?? greenhouseList[0],
-                items: greenhouseList,
-                errorText:
-                    _greenhouseError.isNotEmpty ? _greenhouseError : null,
+              DropdownButtonFormField<String>(
+                value: _selectedGH,
+                decoration: InputDecoration(
+                  labelText: 'Pilih Green House',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                items: _ghList.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    selectedGreenhouse = newValue;
-                    _greenhouseError = '';
+                    _selectedGH = newValue;
+                    _loadGHData(newValue!); // Load data ketika GH dipilih
                   });
                 },
               ),
@@ -134,7 +191,8 @@ class _PantauTanamanPagesState extends State<PantauTanamanPages> {
                 labelText: 'Jumlah Daun',
                 hintText: 'Masukkan jumlah daun',
                 keyboardType: TextInputType.number,
-                errorText: _jumlahDaunError.isNotEmpty ? _jumlahDaunError : null,
+                errorText:
+                    _jumlahDaunError.isNotEmpty ? _jumlahDaunError : null,
               ),
               const SizedBox(height: 20),
 

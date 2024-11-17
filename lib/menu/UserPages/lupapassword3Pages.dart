@@ -1,3 +1,4 @@
+import 'package:apps/SendApi/userApi.dart';
 import 'package:apps/menu/UserPages/lupapassword4Pages.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:flutter/material.dart';
@@ -6,16 +7,14 @@ import 'package:lottie/lottie.dart';
 import 'package:apps/src/customConfirmDialog.dart';
 
 class Lupapassword3 extends StatefulWidget {
-  const Lupapassword3({super.key});
+  final String email;
+  const Lupapassword3({super.key, required this.email});
 
   @override
   _Lupapassword3State createState() => _Lupapassword3State();
 }
 
 class _Lupapassword3State extends State<Lupapassword3> {
-  final TextEditingController _passwordBaruController = TextEditingController();
-  final TextEditingController _konfirmasiPasswordController =
-      TextEditingController();
   String _passwordBaruError = '';
   String _konfirmasiPasswordError = '';
   bool _isPasswordVisible = false;
@@ -25,8 +24,15 @@ class _Lupapassword3State extends State<Lupapassword3> {
   bool _isPasswordMatch = true;
   bool _isLoading = false;
 
-  RegExp numReg = RegExp(r".*[0-9].*");
-  RegExp letterReg = RegExp(r".*[A-Za-z].*");
+  final TextEditingController _passwordBaruController = TextEditingController();
+  final TextEditingController _konfirmasiPasswordController =
+      TextEditingController();
+
+  bool get _isButtonEnabled =>
+      _passwordBaruController.text.isNotEmpty &&
+      _konfirmasiPasswordController.text.isNotEmpty &&
+      _passwordBaruController.text == _konfirmasiPasswordController.text &&
+      _strength >= 2 / 4;
 
   String _getPasswordStrengthText() {
     if (_strength <= 1 / 4) {
@@ -40,91 +46,80 @@ class _Lupapassword3State extends State<Lupapassword3> {
     }
   }
 
-  void _checkPassword(String value) {
-    _password = value.trim();
+  RegExp numReg = RegExp(r".*[0-9].*");
+  RegExp letterReg = RegExp(r".*[A-Za-z].*");
 
-    if (_password.isEmpty) {
-      setState(() {
+  void _checkPassword(String value) {
+    setState(() {
+      _password = value.trim();
+
+      if (_password.isEmpty) {
         _strength = 0;
-      });
-    } else if (_password.length < 6) {
-      setState(() {
+      } else if (_password.length < 6) {
         _strength = 1 / 4;
-      });
-    } else if (_password.length < 8) {
-      setState(() {
+      } else if (_password.length < 8) {
         _strength = 2 / 4;
-      });
-    } else {
-      if (!letterReg.hasMatch(_password) || !numReg.hasMatch(_password)) {
-        setState(() {
-          _strength = 3 / 4;
-        });
+      } else if (!letterReg.hasMatch(_password) ||
+          !numReg.hasMatch(_password)) {
+        _strength = 3 / 4;
       } else {
-        setState(() {
-          _strength = 1;
-        });
+        _strength = 1;
       }
+    });
+  }
+
+  void _handleNext() async {
+    bool confirm = await CustomConfirmDialog.show(
+      context: context,
+      title: 'Konfirmasi',
+      message: 'Apakah password yang anda masukkan sudah benar?',
+      confirmText: 'Ya',
+      cancelText: 'Tidak',
+    );
+
+    if (confirm) {
+      setState(() {
+        _isLoading = true;
+        _SendEmailUser();
+      });
     }
   }
 
-  void _validateInputs() async {
-    setState(() {
-      _passwordBaruError = _passwordBaruController.text.isEmpty
-          ? 'Password baru tidak boleh kosong'
-          : '';
-      _konfirmasiPasswordError = _konfirmasiPasswordController.text.isEmpty
-          ? 'Konfirmasi password tidak boleh kosong'
-          : '';
-      _isPasswordMatch =
-          _passwordBaruController.text == _konfirmasiPasswordController.text;
-    });
-
-    if (_passwordBaruError.isEmpty &&
-        _konfirmasiPasswordError.isEmpty &&
-        _strength >= 1 / 2 &&
-        _isPasswordMatch) {
-
-      bool confirm = await CustomConfirmDialog.show(
-        context: context,
-        title: 'Konfirmasi',
-        message: 'Apakah anda yakin ingin mengganti password?',
-        confirmText: 'Ya',
-        cancelText: 'Tidak',
-      );
-
-      if (confirm) {
-        setState(() {
-          _isLoading = true;
-        });
-
-        // Simulasi loading 2 detik
-        Future.delayed(const Duration(seconds: 2), () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LupaPassword4()),
-          );
-        });
+  Future<Map<String, dynamic>?> _SendEmailUser() async {
+    final result = await UserApi.ForgotPassword(widget.email, _password);
+    print("Result : " + result.toString());
+    if (result != null) {
+      if (result['status'] == "success") {
+        print("Result : " + result.toString());
+        // Berhasil mendaftar
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LupaPassword4()),
+        );
+      } else if (result['status'] == "error") {
+        print("Resultt : " + result.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal ubah password : ${result['message']}')),
+        );
+      } else {
+        print("Resulttt : " + result.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('Gagal ubah password : ada kesalahan pengiriman data')),
+        );
       }
-    } else if (!_isPasswordMatch) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Peringatan'),
-            content: const Text('Password dan konfirmasi tidak cocok'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
+    } else {
+      print("gagal : " + result.toString());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Pendaftaran gagal: ada kesalahan pengiriman data')),
       );
     }
+
+    setState(() {
+      _isLoading = false; // Menyembunyikan loading setelah permintaan selesai
+    });
   }
 
   @override
@@ -210,6 +205,10 @@ class _Lupapassword3State extends State<Lupapassword3> {
                       errorText: _konfirmasiPasswordError.isNotEmpty
                           ? _konfirmasiPasswordError
                           : null,
+                      onChanged: (value) {
+                        setState(
+                            () {}); // Menyegarkan state agar tombol diperbarui
+                      },
                       suffixIcon: IconButton(
                         icon: Icon(
                           _isKonfirmasiPasswordVisible
@@ -230,9 +229,11 @@ class _Lupapassword3State extends State<Lupapassword3> {
                       child: SizedBox(
                         width: MediaQuery.of(context).size.width * 0.8,
                         child: ElevatedButton(
-                          onPressed: _validateInputs,
+                          onPressed: _isButtonEnabled ? _handleNext : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: CustomColors.BiruPrimary,
+                            backgroundColor: _isButtonEnabled
+                                ? CustomColors.BiruPrimary
+                                : Colors.grey,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30.0),
                             ),

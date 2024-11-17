@@ -1,3 +1,4 @@
+import 'package:apps/SendApi/userApi.dart';
 import 'package:apps/menu/UserPages/ubahpasswordPages2.dart';
 import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
@@ -28,6 +29,7 @@ class _UbahPasswordPage1State extends State<UbahPasswordPage1> {
 
   final bool _passwordMatch = true;
   final bool _showErrors = false;
+  bool _isLoading = false;
 
   double _strength = 0;
   RegExp numReg = RegExp(r".*[0-9].*");
@@ -98,39 +100,8 @@ class _UbahPasswordPage1State extends State<UbahPasswordPage1> {
     }
   }
 
-  bool _validateInputs() {
-    setState(() {
-      // Validasi Password Lama
-      if (_controllers['Password Lama']!.text.isEmpty) {
-        _errors['Password Lama'] = 'Password lama tidak boleh kosong';
-      }
-
-      // Validasi Password Baru
-      if (_controllers['Password Baru']!.text.isEmpty) {
-        _errors['Password Baru'] = 'Password baru tidak boleh kosong';
-      } else if (_strength < 1 / 2) {
-        _errors['Password Baru'] = 'Password terlalu lemah';
-      }
-
-      // Validasi Konfirmasi Password
-      if (_controllers['Konfirmasi Password Baru']!.text.isEmpty) {
-        _errors['Konfirmasi Password Baru'] =
-            'Konfirmasi password tidak boleh kosong';
-      } else if (_controllers['Konfirmasi Password Baru']!.text !=
-          _controllers['Password Baru']!.text) {
-        _errors['Konfirmasi Password Baru'] = 'Konfirmasi password tidak cocok';
-      }
-    });
-
-    return _errors.values.every((error) => error.isEmpty);
-  }
-
-  bool _isLoading = false;
-
-  void _handleSimpanPerubahan() async {
-    // Cek validasi terlebih dahulu
+  Future<void> cekGantiPassword() async {
     if (_validateInputs()) {
-      // Jika valid, tampilkan CustomConfirmDialog
       bool confirm = await CustomConfirmDialog.show(
         context: context,
         title: 'Konfirmasi',
@@ -138,7 +109,6 @@ class _UbahPasswordPage1State extends State<UbahPasswordPage1> {
         confirmText: 'Ya',
         cancelText: 'Tidak',
       );
-
       if (confirm) {
         setState(() {
           _isLoading = true;
@@ -146,17 +116,41 @@ class _UbahPasswordPage1State extends State<UbahPasswordPage1> {
 
         try {
           await Future.delayed(const Duration(seconds: 2));
-
           if (mounted) {
-            Navigator.push(
-              context,
-              SmoothPageTransition(
-                page: Ubahpasswordpages2(
-                  passwordLama: _controllers['Password Lama']!.text,
-                  passwordBaru: _controllers['Password Baru']!.text,
-                ),
-              ),
-            );
+            print(_controllers['Password Lama']!.text.toString());
+            print(_controllers['Password Baru']!.text.toString());
+            print(_controllers['Konfirmasi Password Baru']!.text.toString());
+            final result = await UserApi.GantiPasswordProfil(
+                _controllers['Password Lama']!.text.toString(),
+                _controllers['Password Baru']!.text.toString(),
+                _controllers['Konfirmasi Password Baru']!.text.toString());
+            print("result : " + result.toString());
+
+            if (result != null) {
+              if (result['status'] != "error") {
+                setState(() {});
+                Navigator.push(
+                  context,
+                  SmoothPageTransition(
+                    page: Ubahpasswordpages2(
+                      passwordLama: _controllers['Password Lama']!.text,
+                      passwordBaru: _controllers['Password Baru']!.text,
+                    ),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content:
+                          Text('Gagal ubah password : ${result['message']}')),
+                );
+              }
+            } else {
+              print(result);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Kesalahan pada server')),
+              );
+            }
           }
         } finally {
           if (mounted) {
@@ -167,6 +161,27 @@ class _UbahPasswordPage1State extends State<UbahPasswordPage1> {
         }
       }
     }
+  }
+
+  bool _validateInputs() {
+    setState(() {
+      // Validasi Password Lama
+      if (_controllers['Password Lama']!.text.isEmpty) {
+        _errors['Password Lama'] = 'Password lama tidak boleh kosong';
+      } else if (_controllers['Password Baru']!.text.isEmpty) {
+        _errors['Password Baru'] = 'Password baru tidak boleh kosong';
+      } else if (_strength < 1 / 2) {
+        _errors['Password Baru'] = 'Password terlalu lemah';
+      } else if (_controllers['Konfirmasi Password Baru']!.text.isEmpty) {
+        _errors['Konfirmasi Password Baru'] =
+            'Konfirmasi password tidak boleh kosong';
+      } else if (_controllers['Konfirmasi Password Baru']!.text !=
+          _controllers['Password Baru']!.text) {
+        _errors['Konfirmasi Password Baru'] = 'Konfirmasi password tidak cocok';
+      }
+    });
+
+    return _errors.values.every((error) => error.isEmpty);
   }
 
   bool _obscurePasswordLama = true;
@@ -410,7 +425,8 @@ class _UbahPasswordPage1State extends State<UbahPasswordPage1> {
                       ),
                       onPressed: () {
                         setState(() {
-                          _obscureKonfirmasiPassword = !_obscureKonfirmasiPassword;
+                          _obscureKonfirmasiPassword =
+                              !_obscureKonfirmasiPassword;
                         });
                       },
                     ),
@@ -432,7 +448,7 @@ class _UbahPasswordPage1State extends State<UbahPasswordPage1> {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 15.0),
                         ),
-                        onPressed: _handleSimpanPerubahan,
+                        onPressed: cekGantiPassword,
                         child: const Text(
                           'Simpan',
                           style: TextStyle(

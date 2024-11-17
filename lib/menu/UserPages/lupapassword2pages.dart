@@ -1,4 +1,5 @@
 import 'package:apps/menu/UserPages/lupapassword3Pages.dart';
+import 'package:email_otp/email_otp.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customColor.dart';
 import 'dart:async';
@@ -6,7 +7,8 @@ import 'package:pinput/pinput.dart';
 import 'package:lottie/lottie.dart';
 
 class LupaPassword2 extends StatefulWidget {
-  const LupaPassword2({super.key});
+  final String email;
+  const LupaPassword2({super.key, required this.email});
 
   @override
   _LupaPassword2State createState() => _LupaPassword2State();
@@ -25,7 +27,16 @@ class _LupaPassword2State extends State<LupaPassword2> {
   @override
   void initState() {
     super.initState();
+    EmailOTP.config(
+      appName: 'CERTANI',
+      otpType: OTPType.numeric,
+      expiry: 50000,
+      emailTheme: EmailTheme.v3,
+      appEmail: 'me@rohitchouhan.com',
+      otpLength: 5,
+    );
     startTimer();
+    resendOTP(); // Kirim OTP pertama kali
   }
 
   @override
@@ -49,34 +60,42 @@ class _LupaPassword2State extends State<LupaPassword2> {
     });
   }
 
-  void resendOTP() {
+  Future<void> resendOTP() async {
     setState(() {
       _timerSeconds = 60;
       _isTimerRunning = true;
     });
     startTimer();
+
+    bool sent = await EmailOTP.sendOTP(email: widget.email);
+    if (!sent) {
+      setState(() {
+        _otpError = 'Gagal mengirim OTP. Coba lagi nanti.';
+      });
+    }
   }
 
-  void validateOTP() {
-    if (pinController.text.length < 5) {
-      setState(() {
-        _otpError = 'Mohon isikan kode OTP yang dikirimkan ke email anda';
-      });
-      return;
-    }
+  bool isOTPFilled() {
+    return pinController.text.length == 5;
+  }
 
+  void validateOTP() async {
+    bool isValid = await EmailOTP.verifyOTP(otp: pinController.text);
     setState(() {
-      _otpError = '';
-      _isLoading = true;
+      _otpError = isValid ? '' : 'Kode OTP salah atau tidak valid.';
     });
-
-    // Simulasi loading 2 detik
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Lupapassword3()),
-      );
-    });
+    if (isValid) {
+      setState(() => _isLoading = true);
+      Future.delayed(const Duration(seconds: 2), () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => Lupapassword3(
+                    email: widget.email,
+                  )),
+        );
+      });
+    }
   }
 
   @override

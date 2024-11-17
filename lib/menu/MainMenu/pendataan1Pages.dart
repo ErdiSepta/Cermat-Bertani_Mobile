@@ -1,3 +1,4 @@
+import 'package:apps/SendApi/ghApi.dart';
 import 'package:apps/menu/MainMenu/rekapHamadanPenyakitPages.dart';
 import 'package:apps/menu/MainMenu/rekapIsiPanenPages.dart';
 import 'package:apps/menu/MainMenu/rekapPemantauanPages.dart';
@@ -10,14 +11,14 @@ class Pendataan1pages extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-return Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Pendataan',
           style: TextStyle(
             color: Colors.white,
             fontSize: 25,
-            fontFamily: 'OdorMeanChey',  // Mengubah font family sesuai topnav
+            fontFamily: 'OdorMeanChey', // Mengubah font family sesuai topnav
           ),
         ),
         backgroundColor: Colors.blue,
@@ -33,52 +34,76 @@ return Scaffold(
                 context,
                 'assets/images/pantau tanaman.png',
                 'Rekap Pemantauan',
-                () {
-                  Navigator.push(
-                    context,
-                    SmoothPageTransition(
-                      page: const RekapPemantauanPages(),
-                    ),
-                  );
+                () async {
+                  final result = await ghApi.getDataGh();
+                  if (result?['data_gh'] != null &&
+                      result?['data_gh'] != '[]') {
+                    print(result?['data_gh']);
+                    Navigator.push(context,
+                        SmoothPageTransition(page: RekapPemantauanPages()));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text('Anda belum memiliki Green House!')),
+                    );
+                  }
                 },
               ),
               buildMenuButton(
                 context,
                 'assets/images/hama.png',
                 'Rekap Hama & Penyakit',
-                () {
-                  Navigator.push(
-                    context,
-                    SmoothPageTransition(
-                      page: const RekapHamadanPenyakitPages(),
-                    ),
-                  );
+                () async {
+                  final result = await ghApi.getDataGh();
+                  if (result?['data_gh'] != null &&
+                      result?['data_gh'] != '[]') {
+                    print(result?['data_gh']);
+                    Navigator.push(context,
+                        SmoothPageTransition(page: RekapPembudidayaanPages()));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text('Anda belum memiliki Green House!')),
+                    );
+                  }
                 },
               ),
               buildMenuButton(
                 context,
                 'assets/images/pembudidayaan.png',
                 'Rekap Pembudidayaan',
-                () {
-                  Navigator.push(
-                    context,
-                    SmoothPageTransition(
-                      page: const RekapPembudidayaanPages(),
-                    ),
-                  );
+                () async {
+                  final result = await ghApi.getDataGh();
+                  if (result?['data_gh'] != null &&
+                      result?['data_gh'] != '[]') {
+                    print(result?['data_gh']);
+                    Navigator.push(context,
+                        SmoothPageTransition(page: RekapPembudidayaanPages()));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text('Anda belum memiliki Green House!')),
+                    );
+                  }
                 },
               ),
               buildMenuButton(
                 context,
                 'assets/images/panen.png',
                 'Rekap Hasil Panen',
-                () {
-                  Navigator.push(
-                    context,
-                    SmoothPageTransition(
-                      page: const RekapIsiPanenPages(),
-                    ),
-                  );
+                () async {
+                  final result = await ghApi.getDataGh();
+                  if (result?['data_gh'] != null &&
+                      result?['data_gh'] != '[]') {
+                    print(result?['data_gh']);
+                    Navigator.push(context,
+                        SmoothPageTransition(page: RekapIsiPanenPages()));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text('Anda belum memiliki Green House!')),
+                    );
+                  }
                 },
               ),
             ],

@@ -1,3 +1,5 @@
+import 'package:apps/SendApi/HamaAndPenyakitApi.dart';
+import 'package:apps/SendApi/ghApi.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:apps/src/customDropdown.dart';
@@ -12,7 +14,40 @@ class HamaPenyakitPages extends StatefulWidget {
 }
 
 class _HamaPenyakitPagesState extends State<HamaPenyakitPages> {
-  String? selectedGreenhouse;
+  //AWAL BACKEND
+  String? _selectedGH;
+  String? _idGH = "";
+  int? RealIDGH = 0;
+  List<String> _ghList = [];
+  void showDataGh() async {
+    final result = await ghApi.getDataGhNama();
+    if (result != null) {
+      print("result " + result.toString());
+      setState(() {
+        // Pastikan ini di dalam setState untuk memperbarui UI
+        _ghData = result['data_gh'];
+        _ghList = result['data_gh'].keys.toList();
+        _selectedGH = _ghList[0].toString();
+        print(_selectedGH);
+        if (_selectedGH != null) {
+          _loadGHData(_selectedGH!); // Panggil fungsi untuk memuat data GH
+        }
+      });
+    } else {
+      print("data kosong");
+    }
+  }
+
+  // Data dummy untuk setiap GH
+  Map<String, dynamic> _ghData = {};
+  void _loadGHData(String gh) {
+    final data = _ghData[gh];
+    // Menyimpan ID GH untuk kebutuhan lainnya
+    _idGH = data['uuid'];
+    RealIDGH = data['id_gh'];
+  }
+
+  //AKHIR BACKEND
   String? selectedWarnaDaun;
   String? selectedWarnaBatang;
   String? selectedSeranganHama;
@@ -46,6 +81,7 @@ class _HamaPenyakitPagesState extends State<HamaPenyakitPages> {
   @override
   void initState() {
     super.initState();
+    showDataGh();
     warnaDaunLainController.addListener(_clearWarnaDaunLainError);
     warnaBatangLainController.addListener(_clearWarnaBatangLainError);
     seranganHamaLainController.addListener(_clearSeranganHamaLainError);
@@ -84,8 +120,7 @@ class _HamaPenyakitPagesState extends State<HamaPenyakitPages> {
 
   void _validateInputs() async {
     setState(() {
-      _greenhouseError =
-          selectedGreenhouse == null ? 'Greenhouse harus dipilih' : '';
+      _greenhouseError = _selectedGH == null ? 'Greenhouse harus dipilih' : '';
       _warnaDaunError =
           selectedWarnaDaun == null ? 'Warna daun harus dipilih' : '';
       _warnaBatangError =
@@ -115,7 +150,6 @@ class _HamaPenyakitPagesState extends State<HamaPenyakitPages> {
         _warnaDaunLainError.isEmpty &&
         _warnaBatangLainError.isEmpty &&
         _seranganHamaLainError.isEmpty) {
-
       bool confirm = await CustomConfirmDialog.show(
         context: context,
         title: 'Konfirmasi',
@@ -124,9 +158,40 @@ class _HamaPenyakitPagesState extends State<HamaPenyakitPages> {
         cancelText: 'Tidak',
       );
 
+      String? _getwarnaDaun = warnaDaunLainController.text.isEmpty
+          ? selectedSeranganHama
+          : warnaDaunLainController.text;
+      String? _getwarnaBatang = warnaBatangLainController.text.isEmpty
+          ? selectedSeranganHama
+          : warnaBatangLainController.text;
+      String? _getSerangan = seranganHamaLainController.text.isEmpty
+          ? selectedSeranganHama
+          : seranganHamaLainController.text;
+      String? _getPenanganan = caraPenangananController.text.isEmpty
+          ? "Belum Ada"
+          : caraPenangananController.text;
+      String? _getSPestisida =
+          pestisidaController.text.isEmpty ? "0" : pestisidaController.text;
       if (confirm) {
-        print('Semua data valid, siap untuk disimpan');
-        Navigator.pop(context);
+        final result = await HamaAndPenyakitApi.tambahHamaAndPenyakit(
+            _getwarnaDaun.toString(),
+            _getwarnaBatang.toString(),
+            _getSerangan.toString(),
+            _getPenanganan.toString(),
+            _getSPestisida.toString(),
+            _idGH.toString());
+
+        if (result == null) {
+          print('Data kosong!!!');
+        } else if (result['status'] == "success") {
+          print('berhasil simpan');
+          Navigator.pop(context); // Kembali ke halaman sebelumnya
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Pengiriman data gagal: ${result['message']}')),
+          );
+        }
       }
     }
   }
@@ -153,19 +218,25 @@ class _HamaPenyakitPagesState extends State<HamaPenyakitPages> {
                 ),
               ),
               const SizedBox(height: 30),
-
-              // Greenhouse
-              CustomDropdown(
-                labelText: 'Greenhouse',
-                hintText: 'Pilih Greenhouse',
-                value: selectedGreenhouse ?? greenhouseList[0],
-                items: greenhouseList,
-                errorText:
-                    _greenhouseError.isNotEmpty ? _greenhouseError : null,
+              // Dropdown Greenhouse
+              DropdownButtonFormField<String>(
+                value: _selectedGH,
+                decoration: InputDecoration(
+                  labelText: 'Pilih Green House',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                items: _ghList.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    selectedGreenhouse = newValue;
-                    _greenhouseError = '';
+                    _selectedGH = newValue;
+                    _loadGHData(newValue!); // Load data ketika GH dipilih
                   });
                 },
               ),

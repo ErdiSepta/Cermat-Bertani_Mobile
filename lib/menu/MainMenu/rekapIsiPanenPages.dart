@@ -1,6 +1,19 @@
+import 'dart:io';
+import 'package:apps/menu/UserPages/loginPages.dart';
+import 'package:meta/meta.dart';
+import 'package:intl/intl.dart';
+
+import 'package:apps/SendApi/PanenApi.dart';
+import 'package:apps/src/customFormfield.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customDropdown.dart';
 import 'package:apps/src/topnav.dart';
+
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:apps/SendApi/ghApi.dart';
 
 class RekapIsiPanenPages extends StatefulWidget {
   const RekapIsiPanenPages({super.key});
@@ -10,77 +23,245 @@ class RekapIsiPanenPages extends StatefulWidget {
 }
 
 class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
+  final pdf = pw.Document();
+  Future<void> printAndSavePdf(
+    List<Map<String, dynamic>> rekapData,
+    String tanggalawall,
+    String tanggalakhirr,
+  ) async {
+    final pdf = pw.Document();
+
+    // Tambahkan halaman ke dokumen PDF
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          // Define the table headers
+          final headers = [
+            'No',
+            'Tanggal Panen',
+            'Jumlah Buah',
+            'Berat Buah',
+            'Ukuran Buah',
+            'Rasa Buah',
+            'Biaya Operasional',
+            'Pendapatan Penjualan',
+          ];
+
+          // Define the table rows using rekapData
+          final rows = rekapData.asMap().entries.map((entry) {
+            final index = entry.key;
+            final data = entry.value;
+
+            return [
+              (index + 1).toString(),
+              data['tanggal_panen'].toString(),
+              data['jumlah_buah'].toString(),
+              data['berat_buah'].toString(),
+              data['ukuran_buah'].toString(),
+              data['rasa_buah'].toString(),
+              data['biaya_operasional'].toString(),
+              data['pendapatan_penjualan'].toString(),
+            ];
+          }).toList();
+
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Add title
+              pw.Text(
+                'REKAP ISI PANEN',
+                style:
+                    pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.SizedBox(height: 4),
+
+              // Add date range
+              pw.Text(
+                'Rentang Waktu: $tanggalawall - $tanggalakhirr',
+                style:
+                    pw.TextStyle(fontSize: 12, fontStyle: pw.FontStyle.italic),
+              ),
+              pw.SizedBox(height: 16),
+
+              // Create the table in PDF format
+              pw.Table.fromTextArray(
+                headers: headers,
+                data: rows,
+                border: pw.TableBorder.all(width: 0.5),
+                headerStyle:
+                    pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+                // headerDecoration: pw.BoxDecoration(
+                //     color: const pw.PdfColor(0.85, 0.85, 0.85)),
+                cellAlignment: pw.Alignment.center,
+                cellStyle: pw.TextStyle(fontSize: 8),
+                cellPadding: const pw.EdgeInsets.all(4),
+                columnWidths: {
+                  0: const pw.FlexColumnWidth(0.5), // No
+                  1: const pw.FlexColumnWidth(1.5), // Tanggal
+                  2: const pw.FlexColumnWidth(1), // jml b
+                  3: const pw.FlexColumnWidth(1), // brt b
+                  4: const pw.FlexColumnWidth(1), // uk b
+                  5: const pw.FlexColumnWidth(1), // rs b
+                  6: const pw.FlexColumnWidth(1.5), //biaya
+                  7: const pw.FlexColumnWidth(1.5), // pendapatan
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    // Cetak dan simpan PDF
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
+
+    Directory appDocDirectory = await getApplicationDocumentsDirectory();
+    Directory newDirectory =
+        await Directory('${appDocDirectory.path}/dir').create(recursive: true);
+    final file = File('${newDirectory.path}/rekap_data.pdf');
+    await file.writeAsBytes(await pdf.save());
+  }
+
   String? selectedGreenhouse;
-  String? selectedJenisData;
   String _greenhouseError = '';
-  String _jenisDataError = '';
   String _tanggalAwalError = '';
   String _tanggalAkhirError = '';
+  Future<void> loadChartData() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-  final TextEditingController tanggalAwalController = TextEditingController();
-  final TextEditingController tanggalAkhirController = TextEditingController();
+    // Contoh JSON hasil dari API
+    final result = await PanenApi.showRekapPanen(
+      tanggalAwall.text.toString(),
+      tanggalAkhirr.text.toString(),
+      _idGH.toString(),
+    );
 
-  final List<String> greenhouseList = [
-    'Pilih Greenhouse',
-    'GH-01',
-    'GH-02',
-    'GH-03'
-  ];
-  final List<String> jenisDataList = [
-    'Pilih Jenis Data',
-    'Jumlah Panen',
-    'Berat Panen',
-    'Kualitas Panen'
-  ];
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Tidak ada data pada tanggal dan Green house yang di pilih')),
+      );
+    } else if (result['status'] == 'success') {
+      List<dynamic> tabel_data = result['data'];
 
-  // Update data dummy untuk tabel tahunan
-  final List<Map<String, String>> rekapData = [
-    {
-      'tahun': '2024',
-      'jumlahBerat': '1200 kg',
-      'ukuranRata': '250 gram',
-      'rasaRata': 'Manis',
-      'biayaOperasional': 'Rp 60.000.000',
-      'pendapatan': 'Rp 96.000.000'
-    },
-    {
-      'tahun': '2023',
-      'jumlahBerat': '1000 kg',
-      'ukuranRata': '200 gram',
-      'rasaRata': 'Manis Sedang',
-      'biayaOperasional': 'Rp 54.000.000',
-      'pendapatan': 'Rp 84.000.000'
-    },
-    {
-      'tahun': '2022',
-      'jumlahBerat': '950 kg',
-      'ukuranRata': '225 gram',
-      'rasaRata': 'Manis',
-      'biayaOperasional': 'Rp 48.000.000',
-      'pendapatan': 'Rp 76.000.000'
-    },
-  ];
+      setState(() {
+        rekapData = tabel_data.asMap().entries.map((entry) {
+          // Memproses setiap entry menjadi Map<String, dynamic>
+          return {
+            "tanggal_panen": entry.value['tanggal_panen'],
+            "jumlah_buah": entry.value['jumlah_buah'],
+            "berat_buah": entry.value['berat_buah'],
+            "ukuran_buah": entry.value['ukuran_buah'],
+            "rasa_buah": entry.value['rasa_buah'],
+            "biaya_operasional": entry.value['biaya_operasional'],
+            "pendapatan_penjualan": entry.value['pendapatan_penjualan'],
+          };
+        }).toList();
 
-  Future<void> _selectDate(
-      BuildContext context, TextEditingController controller) async {
+        _isLoading = false;
+      });
+    } else {
+      // Handle error ketika gagal memuat data
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${result?['message']}')),
+      );
+    }
+  }
+
+  // Panggil `loadChartData` setelah dropdown atau tanggal berubah
+  void _onFiltersChanged() {
+    loadChartData();
+  }
+
+  DateTime? _selectedDate;
+  Future<void> _selectDateAwal(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
-      lastDate: DateTime(2025),
+      lastDate: DateTime.now(),
     );
-    if (picked != null) {
+    if (picked != null && picked != _selectedDate) {
       setState(() {
-        controller.text = "${picked.day}/${picked.month}/${picked.year}";
+        _selectedDate = picked;
+        tanggalAwall.text = "${picked.year}-${picked.month}-${picked.day}";
+        _onFiltersChanged();
       });
     }
   }
 
+  Future<void> _selectDateAkhir(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        tanggalAkhirr.text = "${picked.year}-${picked.month}-${picked.day}";
+        _onFiltersChanged();
+      });
+    }
+  }
+
+  String _tanggalawalError = '';
+  String _tanggalakhirError = '';
+  final tanggalAwall = TextEditingController();
+  final tanggalAkhirr = TextEditingController();
+  bool _isLoading = false;
+  String? _selectedGH;
+  String? _idGH = "";
+  int? RealIDGH = 0;
+  List<String> _ghList = [];
+  void showDataGh() async {
+    final result = await ghApi.getDataGhNama();
+    if (result != null) {
+      setState(() {
+        // Pastikan ini di dalam setState untuk memperbarui UI
+        _ghData = result['data_gh'];
+        _ghList = result['data_gh'].keys.toList();
+        _selectedGH = _ghList[0].toString();
+        if (_selectedGH != null) {
+          _loadGHData(_selectedGH!);
+        }
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Anda belum memiliki Green House ')),
+      );
+      print("data gh kosong");
+    }
+  }
+
+  Map<String, dynamic> _ghData = {};
+  void _loadGHData(String gh) {
+    final data = _ghData[gh];
+    // Menyimpan ID GH untuk kebutuhan lainnya
+    _idGH = data['uuid'];
+    RealIDGH = data['id_gh'];
+  }
+
+  String? selectedLabel;
+  List<Map<String, dynamic>> rekapData = [];
+
   @override
   void initState() {
     super.initState();
-    tanggalAwalController.addListener(_clearTanggalAwalError);
-    tanggalAkhirController.addListener(_clearTanggalAkhirError);
+    showDataGh();
+    print(Login.token);
+    tanggalAwall.addListener(_clearTanggalAwalError);
+    tanggalAkhirr.addListener(_clearTanggalAkhirError);
   }
 
   // Clear error functions
@@ -96,24 +277,28 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
     }
   }
 
-  void _validateInputs() {
+  void _validateInputs() async {
     setState(() {
       _greenhouseError =
           selectedGreenhouse == null ? 'Greenhouse harus dipilih' : '';
-      _jenisDataError =
-          selectedJenisData == null ? 'Jenis data harus dipilih' : '';
-      _tanggalAwalError =
-          tanggalAwalController.text.isEmpty ? 'Tanggal awal harus diisi' : '';
-      _tanggalAkhirError = tanggalAkhirController.text.isEmpty
-          ? 'Tanggal akhir harus diisi'
-          : '';
+      _tanggalawalError =
+          tanggalAwall.text.isEmpty ? 'Tanggal awal harus diisi' : '';
+      _tanggalakhirError =
+          tanggalAkhirr.text.isEmpty ? 'Tanggal akhir harus diisi' : '';
     });
-
-    if (_greenhouseError.isEmpty &&
-        _jenisDataError.isEmpty &&
-        _tanggalAwalError.isEmpty &&
-        _tanggalAkhirError.isEmpty) {
+    if (rekapData.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Tabel Kosong!, Tidak ada yang bisa di Simpan! ')),
+      );
+    }
+    if (_tanggalawalError.isEmpty &&
+        _tanggalakhirError.isEmpty &&
+        rekapData.isNotEmpty) {
+      await printAndSavePdf(rekapData, tanggalAwall.text, tanggalAkhirr.text);
       print('Semua data valid, siap untuk disimpan');
+    } else {
+      print("ADA YANG KOSONG");
     }
   }
 
@@ -140,36 +325,40 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
               ),
               const SizedBox(height: 30),
 
-              // Greenhouse Dropdown
-              CustomDropdown(
-                labelText: 'Greenhouse',
-                hintText: 'Pilih Greenhouse',
-                value: selectedGreenhouse ?? greenhouseList[0],
-                items: greenhouseList,
-                errorText:
-                    _greenhouseError.isNotEmpty ? _greenhouseError : null,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedGreenhouse = newValue;
-                    _greenhouseError = '';
-                  });
-                },
+              const Text(
+                'Greenhouse',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-              const SizedBox(height: 20),
-
-              // Jenis Data Dropdown
-              CustomDropdown(
-                labelText: 'Jenis Data',
-                hintText: 'Pilih Jenis Data',
-                value: selectedJenisData ?? jenisDataList[0],
-                items: jenisDataList,
-                errorText: _jenisDataError.isNotEmpty ? _jenisDataError : null,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedJenisData = newValue;
-                    _jenisDataError = '';
-                  });
-                },
+              // Greenhouse Dropdown
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  underline: Container(),
+                  hint: const Text('Pilih Greenhouse'),
+                  value: _selectedGH,
+                  items: _ghList.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedGH = newValue;
+                      _loadGHData(newValue!);
+                      _onFiltersChanged();
+                    });
+                  },
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -187,23 +376,19 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
                 children: [
                   const SizedBox(width: 60, child: Text('Awal')),
                   Expanded(
-                    child: TextField(
-                      controller: tanggalAwalController,
-                      decoration: InputDecoration(
-                        hintText: 'Pilih Tanggal Awal',
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.calendar_today),
-                          onPressed: () =>
-                              _selectDate(context, tanggalAwalController),
+                    child: GestureDetector(
+                      onTap: () => _selectDateAwal(context),
+                      child: AbsorbPointer(
+                        child: CustomFormField(
+                          controller: tanggalAwall,
+                          labelText: '',
+                          hintText: 'Pilih Tanggal Awal',
+                          errorText: _tanggalawalError.isNotEmpty
+                              ? _tanggalawalError
+                              : null,
+                          suffixIcon: Icon(Icons.calendar_today),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        errorText: _tanggalAwalError.isNotEmpty
-                            ? _tanggalAwalError
-                            : null,
                       ),
-                      readOnly: true,
                     ),
                   ),
                 ],
@@ -213,23 +398,19 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
                 children: [
                   const SizedBox(width: 60, child: Text('Akhir')),
                   Expanded(
-                    child: TextField(
-                      controller: tanggalAkhirController,
-                      decoration: InputDecoration(
-                        hintText: 'Pilih Tanggal Akhir',
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.calendar_today),
-                          onPressed: () =>
-                              _selectDate(context, tanggalAkhirController),
+                    child: GestureDetector(
+                      onTap: () => _selectDateAkhir(context),
+                      child: AbsorbPointer(
+                        child: CustomFormField(
+                          controller: tanggalAkhirr,
+                          labelText: '',
+                          hintText: 'Pilih Tanggal akhir',
+                          errorText: _tanggalakhirError.isNotEmpty
+                              ? _tanggalakhirError
+                              : null,
+                          suffixIcon: Icon(Icons.calendar_today),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        errorText: _tanggalAkhirError.isNotEmpty
-                            ? _tanggalAkhirError
-                            : null,
                       ),
-                      readOnly: true,
                     ),
                   ),
                 ],
@@ -255,13 +436,19 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
                       ),
                       DataColumn(
                         label: Text(
-                          'Tahun',
+                          'Tanggal',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                       DataColumn(
                         label: Text(
-                          'Jumlah Berat',
+                          'Jumlah Buah',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Berat Buah',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -296,12 +483,16 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
                       return DataRow(
                         cells: [
                           DataCell(Text('${index + 1}')),
-                          DataCell(Text(data['tahun'] ?? '')),
-                          DataCell(Text(data['jumlahBerat'] ?? '')),
-                          DataCell(Text(data['ukuranRata'] ?? '')),
-                          DataCell(Text(data['rasaRata'] ?? '')),
-                          DataCell(Text(data['biayaOperasional'] ?? '')),
-                          DataCell(Text(data['pendapatan'] ?? '')),
+                          DataCell(Text(data['tanggal_panen'] ?? '')),
+                          DataCell(Text(data['jumlah_buah'] ?? '')),
+                          DataCell(Text(data['berat_buah'] ?? '')),
+                          DataCell(Text(data['ukuran_buah'] ?? '')),
+                          DataCell(Text(data['rasa_buah'] ?? '')),
+                          DataCell(Text(
+                              formatRupiah(data['biaya_operasional']) ?? '')),
+                          DataCell(Text(
+                              formatRupiah(data['pendapatan_penjualan']) ??
+                                  '')),
                         ],
                       );
                     }).toList(),
@@ -340,10 +531,18 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
     );
   }
 
+  String formatRupiah(String? amount) {
+    if (amount == null || amount.isEmpty) return 'Rp. 0';
+
+    final formatter =
+        NumberFormat.currency(locale: 'id', symbol: 'Rp.', decimalDigits: 0);
+    return formatter.format(int.parse(amount));
+  }
+
   @override
   void dispose() {
-    tanggalAwalController.removeListener(_clearTanggalAwalError);
-    tanggalAkhirController.removeListener(_clearTanggalAkhirError);
+    tanggalAwall.removeListener(_clearTanggalAwalError);
+    tanggalAkhirr.removeListener(_clearTanggalAkhirError);
     super.dispose();
   }
 }

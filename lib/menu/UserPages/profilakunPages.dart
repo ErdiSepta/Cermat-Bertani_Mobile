@@ -1,3 +1,10 @@
+import 'dart:convert';
+import 'package:apps/src/pageTransition.dart';
+import 'package:crypto/crypto.dart';
+
+import 'package:apps/SendApi/Server.dart';
+import 'package:apps/SendApi/userApi.dart';
+import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/topnav.dart';
@@ -7,6 +14,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:apps/src/customDropdown.dart';
 import 'package:apps/src/customConfirmDialog.dart';
+import 'package:http/http.dart' as http;
 
 class ProfilAkunPage extends StatefulWidget {
   const ProfilAkunPage({super.key});
@@ -17,17 +25,256 @@ class ProfilAkunPage extends StatefulWidget {
 
 class _ProfilAkunPageState extends State<ProfilAkunPage> {
   bool _isEditing = false;
-  File? _image;
-  final ImagePicker _picker = ImagePicker();
+  bool _isLoading = false;
+  String email = "";
+  String nama_lengkap = "";
+  String nik = "";
+  String alamat = "";
+  String no_hp = "";
+  String foto = "";
+  int jumlah_gh = 0;
 
-  // Definisi controller untuk setiap field secara manual
-  final namaLengkapController = TextEditingController(text: 'Ilhammm');
-  final nikController = TextEditingController(text: '3512395710297312');
-  String _selectedJenisKelamin = 'Laki - Laki'; // Default value
-  final List<String> _jenisKelaminItems = ['Laki - Laki', 'Perempuan'];
-  final noHpController = TextEditingController(text: '081345123120');
-  final alamatController = TextEditingController(text: 'Nganjuk, Bogo');
-  final jumlahGHController = TextEditingController(text: '3');
+  final ImagePicker _picker = ImagePicker();
+  File? _profileImage;
+
+  String ImageSaatIni = "";
+  // Definisi controller untuk setiap field
+  TextEditingController namaLengkapController = TextEditingController();
+  TextEditingController nikController = TextEditingController();
+  TextEditingController noHpController = TextEditingController();
+  TextEditingController alamatController = TextEditingController();
+  TextEditingController jumlahGHController = TextEditingController();
+
+  String jenis_kelamin = "laki-laki";
+  final List<String> _jenisKelaminItems = ['laki-laki', 'perempuan'];
+
+  @override
+  void dispose() {
+    // Bersihkan controller untuk menghindari kebocoran memori
+    namaLengkapController.dispose();
+    nikController.dispose();
+    noHpController.dispose();
+    alamatController.dispose();
+    jumlahGHController.dispose();
+    super.dispose();
+  }
+
+//Awal backend
+
+  Future<void> showProfil() async {
+    final result = await UserApi.getProfil(Login.email);
+    print('result : ' + result.toString());
+    print(Login.token);
+    if (result != null) {
+      if (result['status'] == "success") {
+        if (result['data']['foto'] != null) {
+          foto = result['data']['foto'];
+        }
+        nik = result['data']['nik'];
+        nama_lengkap = result['data']['nama_lengkap'];
+        no_hp = result['data']['no_telpon'];
+        jenis_kelamin = result['data']['jenis_kelamin'];
+        if (result['data']['alamat'] == null) {
+          alamat = "";
+        } else {
+          alamat = result['data']['alamat'];
+        }
+        if (result['jumlah_greenhouse'] == null) {
+          jumlah_gh = 0;
+        } else {
+          jumlah_gh = result['jumlah_greenhouse'];
+        }
+        ;
+        print(nama_lengkap);
+        namaLengkapController.text = nama_lengkap;
+        nikController.text = nik;
+        noHpController.text = no_hp;
+        alamatController.text = alamat;
+        jumlahGHController.text = "${jumlah_gh}";
+      } else if (result['status'] == "error" &&
+          result['message'] == "token error must login") {
+        print("Resultt : " + result.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Pengambilan Data gagal: ${result['message']}')),
+        );
+        Navigator.pushAndRemoveUntil(
+          context,
+          SmoothPageTransition(page: const Login()),
+          (route) => false, // Ini akan menghapus semua halaman sebelumnya
+        );
+      } else if (result['status'] == "error") {
+        print("Resultt : " + result.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Pengambilan data gagal: ${result['message']}')),
+        );
+      } else {
+        print("Resulttt : " + result.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('Pendaftaran gagal: ada kesalahan pengiriman data')),
+        );
+      }
+    } else {
+      print("gagal : " + result.toString());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Pendaftaran gagal: ada kesalahan pengiriman data')),
+      );
+    }
+
+    setState(() {
+      _isLoading = false; // Menyembunyikan loading setelah permintaan selesai
+    });
+  }
+
+  Future<void> postDataToServer() async {
+    // Persiapkan data yang akan dikirim
+    Map<String, dynamic> data = {
+      'nik': nikController.text,
+      'nama_lengkap': namaLengkapController.text,
+      'alamat': alamatController.text,
+      'jenis_kelamin': jenis_kelamin,
+      'no_telpon': noHpController.text,
+      'foto': ImageSaatIni,
+      'email': Login.email,
+    };
+
+    // Buat request POST ke URL server
+    Uri url = Server.urlLaravel("users/profile/profile");
+
+    try {
+      // Kirim request POST ke server
+      final response = await http.post(url,
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": Login.token
+          },
+          body: json.encode(data));
+
+      // Periksa kode status respons
+      if (response.statusCode == 200) {
+        final result = json.decode(response.body);
+        Login.token = result['data'].toString();
+        print(result['data']);
+        if (ImageSaatIni != null) {
+          _uploadImage();
+        }
+        // final decodedPayload = _parseJwt(jwtToken);
+
+        print('Data berhasil dikirim');
+      } else {
+        // Gagal mengirim
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Gagal mengirim data. keterangan : ${json.decode(response.body)['message']}')),
+        );
+        print('Gagal mengirim data. Kode status: ${response.statusCode}');
+        print('Gagal mengirim data. status: ${response.body}');
+        print(json.encode(data));
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengirim data. keterangan : $error')),
+      );
+      print('Terjadi kesalahan1: ${url} ');
+      print('Terjadi kesalahan2: ${json.encode(data)} ');
+      print('Terjadi kesalahan3: $error ');
+    }
+  }
+
+// Fungsi untuk mendekode JWT
+  static Map<String, dynamic> _parseJwt(String token) {
+    final parts = token.split('.');
+    if (parts.length != 3) {
+      throw Exception('Token tidak valid');
+    }
+
+    final payload = _decodeBase64(parts[1]);
+    return json.decode(payload);
+  }
+
+  static String _decodeBase64(String str) {
+    String normalized = base64Url.normalize(str);
+    return utf8.decode(base64Url.decode(normalized));
+  }
+
+  static String _encodeBase64(String str) {
+    // Extract the file name without the extension
+    // Split the file path to get the file name and extension
+
+    List<String> nameParts = str.split('.');
+
+    // Separate the base name and the extension
+    String baseName = nameParts[0];
+    String extension = nameParts.length > 1 ? nameParts.last : "";
+
+    // Encode the base name in Base64
+    String encodedBaseName = base64Url.encode(utf8.encode(baseName));
+
+    // Limit the encoded result to a maximum of 50 characters
+    String truncatedEncodedBaseName = encodedBaseName.length > 30
+        ? encodedBaseName.substring(0, 30)
+        : encodedBaseName;
+
+    // Combine the encoded base name with the original extension
+    return extension.isNotEmpty
+        ? "$truncatedEncodedBaseName.$extension"
+        : truncatedEncodedBaseName;
+  }
+
+  late http.MultipartRequest request;
+  Future<void> _uploadImage() async {
+    if (_profileImage == null) {
+      print("Foto kosong");
+      return;
+    }
+
+    // Menyiapkan request untuk mengunggah gambar ke server
+    var request = http.MultipartRequest(
+      'POST',
+      Server.urlLaravel(
+          "users/profile/profile/uploadFoto"), // Mengubah ke Uri.parse
+    );
+
+    // Menambahkan file gambar ke dalam request
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'image', // Nama field harus sesuai dengan API di Laravel
+        _profileImage!.path,
+        filename: ImageSaatIni,
+      ),
+    );
+
+    try {
+      // Mengirim request ke server
+      var response = await request.send();
+
+      // Menangani respons server
+      if (response.statusCode == 200) {
+        print('Gambar berhasil diunggah');
+      } else {
+        // Cetak isi respons untuk debug
+        String responseBody = await response.stream.bytesToString();
+        print('Terjadi kesalahan: Kode status: ${response.statusCode}');
+        print('Isi respons: $responseBody'); // Tampilkan seluruh isi respons
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Terjadi kesalahan saat mengunggah gambar\nKode: ${response.statusCode}',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Terjadi kesalahannn: $e");
+    }
+  }
+//AKHIR BACKEND
 
   // Definisi error untuk setiap field
   String _namaLengkapError = '';
@@ -41,11 +288,13 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
   void initState() {
     super.initState();
     // Tambahkan listeners untuk setiap controller
+
     namaLengkapController.addListener(() => _clearError('namaLengkap'));
     nikController.addListener(() => _clearError('nik'));
     noHpController.addListener(() => _clearError('noHp'));
     alamatController.addListener(() => _clearError('alamat'));
     jumlahGHController.addListener(() => _clearError('jumlahGH'));
+    showProfil();
   }
 
   void _clearError(String field) {
@@ -93,9 +342,8 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
       _namaLengkapError = namaLengkapController.text.isEmpty
           ? 'Nama lengkap tidak boleh kosong'
           : '';
-      _jenisKelaminError = _selectedJenisKelamin.isEmpty
-          ? 'Jenis kelamin tidak boleh kosong'
-          : '';
+      _jenisKelaminError =
+          jenis_kelamin.isEmpty ? 'Jenis kelamin tidak boleh kosong' : '';
       _alamatError =
           alamatController.text.isEmpty ? 'Alamat tidak boleh kosong' : '';
       _jumlahGHError =
@@ -119,7 +367,7 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
 
       if (konfirmasi && mounted) {
         setState(() {
-          _isEditing = false;
+          postDataToServer();
         });
       }
     }
@@ -130,7 +378,9 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
         await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
-        _image = File(pickedFile.path);
+        _profileImage = File(pickedFile.path);
+        ImageSaatIni = _encodeBase64(pickedFile.name);
+        print("GAMBAR : " + ImageSaatIni);
       });
     }
   }
@@ -158,20 +408,21 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                       radius: 50,
                       backgroundColor: Colors.transparent,
                       child: ClipOval(
-                        child: _image != null
-                            ? Image.file(
-                                _image!,
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                              )
-                            : Image.asset(
-                                'assets/images/fufufafa.png',
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                              ),
-                      ),
+                          child: _profileImage != null
+                              ? Image.file(
+                                  _profileImage!,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                )
+                              : foto == ""
+                                  ? Image.asset(
+                                      'assets/images/Logos Apps.png',
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.network(Server.UrlImageProfil(foto))),
                     ),
                     Positioned(
                       bottom: 0,
@@ -222,7 +473,8 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                 errorText: _nikError.isNotEmpty ? _nikError : null,
                 enabled: _isEditing,
                 maxLength: 16,
-                keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+                keyboardType: const TextInputType.numberWithOptions(
+                    decimal: false, signed: false),
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   FilteringTextInputFormatter.deny(RegExp(r'[A-Za-z]')),
@@ -230,7 +482,8 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                 ],
                 onChanged: (value) {
                   if (value.contains(RegExp(r'[A-Za-z]'))) {
-                    nikController.text = value.replaceAll(RegExp(r'[A-Za-z]'), '');
+                    nikController.text =
+                        value.replaceAll(RegExp(r'[A-Za-z]'), '');
                   }
                   setState(() {
                     _nikError = '';
@@ -241,14 +494,14 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
               CustomDropdown(
                 labelText: 'Jenis Kelamin',
                 hintText: 'Pilih Jenis Kelamin',
-                value: _selectedJenisKelamin,
+                value: jenis_kelamin,
                 items: _jenisKelaminItems,
                 errorText:
                     _jenisKelaminError.isNotEmpty ? _jenisKelaminError : null,
                 enabled: _isEditing,
                 onChanged: (String? newValue) {
                   setState(() {
-                    _selectedJenisKelamin = newValue ?? _selectedJenisKelamin;
+                    jenis_kelamin = newValue ?? jenis_kelamin;
                     _jenisKelaminError = '';
                   });
                 },
@@ -261,7 +514,8 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                 errorText: _noHpError.isNotEmpty ? _noHpError : null,
                 enabled: _isEditing,
                 maxLength: 13,
-                keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+                keyboardType: const TextInputType.numberWithOptions(
+                    decimal: false, signed: false),
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   FilteringTextInputFormatter.deny(RegExp(r'[A-Za-z]')),
@@ -269,7 +523,8 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                 ],
                 onChanged: (value) {
                   if (value.contains(RegExp(r'[A-Za-z]'))) {
-                    noHpController.text = value.replaceAll(RegExp(r'[A-Za-z]'), '');
+                    noHpController.text =
+                        value.replaceAll(RegExp(r'[A-Za-z]'), '');
                   }
                   setState(() {
                     _noHpError = '';
@@ -296,15 +551,17 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
                 labelText: 'Jumlah GH',
                 hintText: 'Masukan Jumlah GH',
                 errorText: _jumlahGHError.isNotEmpty ? _jumlahGHError : null,
-                enabled: _isEditing,
-                keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+                enabled: false,
+                keyboardType: const TextInputType.numberWithOptions(
+                    decimal: false, signed: false),
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   FilteringTextInputFormatter.deny(RegExp(r'[A-Za-z]')),
                 ],
                 onChanged: (value) {
                   if (value.contains(RegExp(r'[A-Za-z]'))) {
-                    jumlahGHController.text = value.replaceAll(RegExp(r'[A-Za-z]'), '');
+                    jumlahGHController.text =
+                        value.replaceAll(RegExp(r'[A-Za-z]'), '');
                   }
                   setState(() {
                     _jumlahGHError = '';
@@ -366,17 +623,6 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    // Dispose semua controller
-    namaLengkapController.dispose();
-    nikController.dispose();
-    noHpController.dispose();
-    alamatController.dispose();
-    jumlahGHController.dispose();
-    super.dispose();
   }
 }
 

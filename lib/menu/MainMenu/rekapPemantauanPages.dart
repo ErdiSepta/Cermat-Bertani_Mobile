@@ -1,7 +1,19 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:meta/meta.dart';
+
+import 'package:apps/SendApi/HomeApi.dart';
+import 'package:apps/src/customFormfield.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customDropdown.dart';
 import 'package:apps/src/topnav.dart';
 import 'package:fl_chart/fl_chart.dart';
+
+import 'package:apps/SendApi/ghApi.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class RekapPemantauanPages extends StatefulWidget {
   const RekapPemantauanPages({super.key});
@@ -11,105 +23,318 @@ class RekapPemantauanPages extends StatefulWidget {
 }
 
 class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
+  final pdf = pw.Document();
+  Future<void> printAndSavePdf(
+    List<Map<String, dynamic>> rekapData,
+    String tanggalawall,
+    String tanggalakhirr,
+  ) async {
+    final pdf = pw.Document();
+
+    // Tambahkan halaman ke dokumen PDF
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          // Define the table headers
+          final headers = [
+            'No',
+            'Tanggal',
+            'PH',
+            'PPM',
+            'Suhu',
+            'Kelembapan',
+            'Tinggi Tanaman',
+            'Jumlah Daun',
+            'Berat Buah',
+          ];
+
+          // Define the table rows using rekapData
+          final rows = rekapData.asMap().entries.map((entry) {
+            final index = entry.key;
+            final data = entry.value;
+
+            return [
+              (index + 1).toString(),
+              data['tanggal'].toString(),
+              data['ph'].toString(),
+              data['ppm'].toString(),
+              data['suhu'].toString(),
+              data['kelembapan'].toString(),
+              data['tinggiTanaman'].toString(),
+              data['jumlahDaun'].toString(),
+              data['beratBuah'].toString(),
+            ];
+          }).toList();
+
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Add title
+              pw.Text(
+                'REKAP ISI PANEN',
+                style:
+                    pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.SizedBox(height: 4),
+
+              // Add date range
+              pw.Text(
+                'Rentang Waktu: $tanggalawall - $tanggalakhirr',
+                style:
+                    pw.TextStyle(fontSize: 12, fontStyle: pw.FontStyle.italic),
+              ),
+              pw.SizedBox(height: 16),
+
+              // Create the table in PDF format
+              pw.Table.fromTextArray(
+                headers: headers,
+                data: rows,
+                border: pw.TableBorder.all(width: 0.5),
+                headerStyle:
+                    pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+                // headerDecoration: pw.BoxDecoration(
+                //     color: const pw.PdfColor(0.85, 0.85, 0.85)),
+                cellAlignment: pw.Alignment.center,
+                cellStyle: pw.TextStyle(fontSize: 8),
+                cellPadding: const pw.EdgeInsets.all(4),
+                columnWidths: {
+                  0: const pw.FlexColumnWidth(0.5), // No
+                  1: const pw.FlexColumnWidth(1.5), // Tanggal
+                  2: const pw.FlexColumnWidth(1), // PH
+                  3: const pw.FlexColumnWidth(1), // PPM
+                  4: const pw.FlexColumnWidth(1), // Suhu
+                  5: const pw.FlexColumnWidth(1), // Kelembapan
+                  6: const pw.FlexColumnWidth(1.5), // Tinggi Tanaman
+                  7: const pw.FlexColumnWidth(1.5), // Jumlah Daun
+                  8: const pw.FlexColumnWidth(1.5), // Berat Buah
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    // Cetak dan simpan PDF
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
+
+    Directory appDocDirectory = await getApplicationDocumentsDirectory();
+    Directory newDirectory =
+        await Directory('${appDocDirectory.path}/dir').create(recursive: true);
+    final file = File('${newDirectory.path}/rekap_data.pdf');
+    await file.writeAsBytes(await pdf.save());
+  }
+
   String? selectedGreenhouse;
   String? selectedJenisData;
   String _greenhouseError = '';
   String _jenisDataError = '';
-  String _tanggalAwalError = '';
-  String _tanggalAkhirError = '';
+  String _tanggalawalError = '';
+  String _tanggalakhirError = '';
+  final tanggalAwall = TextEditingController();
+  final tanggalAkhirr = TextEditingController();
+  List<BarChartGroupData> barData = [];
+  List<String> tanggalLabels = []; // Untuk menyimpan label tanggal
 
-  final TextEditingController tanggalAwalController = TextEditingController();
-  final TextEditingController tanggalAkhirController = TextEditingController();
+  Future<void> loadChartData() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-  final List<String> greenhouseList = ['GH-01', 'GH-02', 'GH-03'];
-  final List<String> jenisDataList = [
-    'PH',
-    'PPM',
-    'Suhu',
-    'Kelembapan',
-    'Tinggi Tanaman',
-    'Jumlah Daun',
-    'Berat Buah'
-  ];
+    // Contoh JSON hasil dari API
+    final result = await HomeApi.showChartHome(
+      selectedJenisData.toString(),
+      tanggalAwall.text.toString(),
+      tanggalAkhirr.text.toString(),
+      _idGH.toString(),
+    );
 
-  // Data dummy untuk chart
-  final List<double> chartData = [4.5, 6.0, 3.5, 7.0, 2.5, 6.5, 2.0];
-  final List<String> days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Tidak ada data pada tanggal dan Green house yang di pilih')),
+      );
+    } else if (result['status'] == 'success') {
+      List<dynamic> data = result['data'];
+      List<dynamic> tabel_data = result['tabel_data'];
 
-  // Tambahkan data dummy untuk tabel
-  final List<Map<String, dynamic>> rekapData = [
-    {
-      'tanggal': '01/12/2024',
-      'ph': 6.5,
-      'ppm': 850,
-      'suhu': 28,
-      'kelembapan': 75,
-      'tinggiTanaman': 25,
-      'jumlahDaun': 8,
-      'beratBuah': 150
-    },
-    {
-      'tanggal': '02/12/2024',
-      'ph': 6.8,
-      'ppm': 900,
-      'suhu': 27,
-      'kelembapan': 78,
-      'tinggiTanaman': 27,
-      'jumlahDaun': 10,
-      'beratBuah': 180
-    },
-    // Tambahkan data dummy lainnya sesuai kebutuhan
-  ];
+      setState(() {
+        rekapData = tabel_data.asMap().entries.map((entry) {
+          // Memproses setiap entry menjadi Map<String, dynamic>
+          return {
+            "tanggal": entry.value['tanggal'],
+            "ph": entry.value['ph'],
+            "ppm": entry.value['ppm'],
+            "suhu": entry.value['suhu'],
+            "kelembapan": entry.value['kelembapan'],
+            "tinggiTanaman": entry.value['tinggiTanaman'],
+            "jumlahDaun": entry.value['jumlahDaun'],
+            "beratBuah": entry.value['beratBuah'],
+          };
+        }).toList();
 
-  Future<void> _selectDate(
-      BuildContext context, TextEditingController controller) async {
+        barData = data.asMap().entries.map((entry) {
+          int index = entry.key;
+          var value = entry.value;
+
+          // Simpan label tanggal
+          tanggalLabels.add(value['tanggal'].toString());
+
+          return BarChartGroupData(
+            x: index,
+            barRods: [
+              BarChartRodData(
+                toY: double.parse(value['value'].toString()),
+                color: Colors.blue,
+              ),
+            ],
+          );
+        }).toList();
+        _isLoading = false;
+      });
+    } else {
+      // Handle error ketika gagal memuat data
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${result?['message']}')),
+      );
+    }
+  }
+
+  // Panggil `loadChartData` setelah dropdown atau tanggal berubah
+  void _onFiltersChanged() {
+    loadChartData();
+  }
+
+  DateTime? _selectedDate;
+  Future<void> _selectDateAwal(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
-      lastDate: DateTime(2025),
+      lastDate: DateTime.now(),
     );
-    if (picked != null) {
+    if (picked != null && picked != _selectedDate) {
       setState(() {
-        controller.text = "${picked.day}/${picked.month}/${picked.year}";
+        _selectedDate = picked;
+        tanggalAwall.text = "${picked.year}-${picked.month}-${picked.day}";
+        _onFiltersChanged();
       });
     }
   }
 
+  Future<void> _selectDateAkhir(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        tanggalAkhirr.text = "${picked.year}-${picked.month}-${picked.day}";
+        _onFiltersChanged();
+      });
+    }
+  }
+
+  bool _isLoading = false;
+  String? _selectedGH;
+  String? _idGH = "";
+  int? RealIDGH = 0;
+  List<String> _ghList = [];
+  void showDataGh() async {
+    final result = await ghApi.getDataGhNama();
+    if (result != null) {
+      setState(() {
+        // Pastikan ini di dalam setState untuk memperbarui UI
+        _ghData = result['data_gh'];
+        _ghList = result['data_gh'].keys.toList();
+        _selectedGH = _ghList[0].toString();
+        if (_selectedGH != null) {
+          _loadGHData(_selectedGH!); // Panggil fungsi untuk memuat data GH
+        }
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Anda belum memiliki Green House ')),
+      );
+      print("data gh kosong");
+    }
+  }
+
+  // Data dummy untuk setiap GH
+  Map<String, dynamic> _ghData = {};
+  void _loadGHData(String gh) {
+    final data = _ghData[gh];
+    // Menyimpan ID GH untuk kebutuhan lainnya
+    _idGH = data['uuid'];
+    RealIDGH = data['id_gh'];
+  }
+
+  String? selectedLabel; // variabel untuk label yang dipilih
+  final Map<String, String> jenisDataMap = {
+    'pH Lingkungan': 'ph_lingkungan',
+    'PPM Lingkungan': 'ppm_lingkungan',
+    'Suhu Lingkungan': 'suhu_lingkungan',
+    'Kelembapan Lingkungan': 'kelembapan_lingkungan',
+    'Tinggi Tanaman': 'tinggi_tanaman',
+    'Jumlah Daun Tanaman': 'jml_daun_tanaman',
+    'Berat Buah Tanaman': 'berat_buah_tanaman',
+  };
+
+  // Tambahkan data dummy untuk tabel
+  List<Map<String, dynamic>> rekapData = [];
+
   @override
   void initState() {
     super.initState();
-    tanggalAwalController.addListener(_clearTanggalAwalError);
-    tanggalAkhirController.addListener(_clearTanggalAkhirError);
+    showDataGh();
+    tanggalAwall.addListener(_clearTanggalAwalError);
+    tanggalAkhirr.addListener(_clearTanggalAkhirError);
   }
 
   // Clear error functions
   void _clearTanggalAwalError() {
-    if (_tanggalAwalError.isNotEmpty) setState(() => _tanggalAwalError = '');
+    if (_tanggalawalError.isNotEmpty) setState(() => _tanggalawalError = '');
   }
 
   void _clearTanggalAkhirError() {
-    if (_tanggalAkhirError.isNotEmpty) setState(() => _tanggalAkhirError = '');
+    if (_tanggalakhirError.isNotEmpty) setState(() => _tanggalakhirError = '');
   }
 
-  void _validateInputs() {
+  void _validateInputs() async {
     setState(() {
       _greenhouseError =
           selectedGreenhouse == null ? 'Greenhouse harus dipilih' : '';
       _jenisDataError =
           selectedJenisData == null ? 'Jenis data harus dipilih' : '';
-      _tanggalAwalError =
-          tanggalAwalController.text.isEmpty ? 'Tanggal awal harus diisi' : '';
-      _tanggalAkhirError = tanggalAkhirController.text.isEmpty
-          ? 'Tanggal akhir harus diisi'
-          : '';
+      _tanggalawalError =
+          tanggalAwall.text.isEmpty ? 'Tanggal awal harus diisi' : '';
+      _tanggalakhirError =
+          tanggalAkhirr.text.isEmpty ? 'Tanggal akhir harus diisi' : '';
     });
-
-    if (_greenhouseError.isEmpty &&
-        _jenisDataError.isEmpty &&
-        _tanggalAwalError.isEmpty &&
-        _tanggalAkhirError.isEmpty) {
+    if (rekapData.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Tabel Kosong!, Tidak ada yang bisa di Simpan! ')),
+      );
+    }
+    if (_jenisDataError.isEmpty &&
+        _tanggalawalError.isEmpty &&
+        _tanggalakhirError.isEmpty &&
+        rekapData.isNotEmpty) {
+      await printAndSavePdf(rekapData, tanggalAwall.text, tanggalAkhirr.text);
       print('Semua data valid, siap untuk disimpan');
+    } else {
+      print("ADA YANG KOSONG");
     }
   }
 
@@ -135,38 +360,76 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
                 ),
               ),
               const SizedBox(height: 30),
-
+              const Text(
+                'Greenhouse',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               // Greenhouse Dropdown
-              CustomDropdown(
-                labelText: 'Greenhouse',
-                hintText: 'Pilih Greenhouse',
-                value: selectedGreenhouse ?? greenhouseList[0],
-                items: greenhouseList,
-                errorText:
-                    _greenhouseError.isNotEmpty ? _greenhouseError : null,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedGreenhouse = newValue;
-                    _greenhouseError = '';
-                  });
-                },
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  underline: Container(),
+                  hint: const Text('Pilih Greenhouse'),
+                  value: _selectedGH,
+                  items: _ghList.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedGH = newValue;
+                      _loadGHData(newValue!); // Load data ketika GH dipilih
+                      _onFiltersChanged();
+                    });
+                  },
+                ),
               ),
               const SizedBox(height: 20),
-
-              // Jenis Data Dropdown
-              CustomDropdown(
-                labelText: 'Jenis Data',
-                hintText: 'Pilih Jenis Data',
-                value: selectedJenisData ?? jenisDataList[0],
-                items: jenisDataList,
-                errorText: _jenisDataError.isNotEmpty ? _jenisDataError : null,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedJenisData = newValue;
-                    _jenisDataError = '';
-                  });
-                },
+              const Text(
+                'Jenis Data',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
+              const SizedBox(height: 8),
+              Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    underline: Container(),
+                    hint: const Text('Pilih Jenis Data'),
+                    value: selectedLabel,
+                    items: jenisDataMap.entries.map((entry) {
+                      return DropdownMenuItem<String>(
+                        value: entry.key,
+                        child: Text(entry.key),
+                      );
+                    }).toList(),
+                    onChanged: (label) {
+                      setState(() {
+                        selectedLabel = label;
+                        // Ambil nilai untuk dikirim ke API
+                        selectedJenisData = jenisDataMap[selectedLabel];
+                        loadChartData();
+                      });
+                    },
+                  )),
               const SizedBox(height: 20),
 
               // Tanggal
@@ -183,23 +446,19 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
                 children: [
                   const SizedBox(width: 60, child: Text('Awal')),
                   Expanded(
-                    child: TextField(
-                      controller: tanggalAwalController,
-                      decoration: InputDecoration(
-                        hintText: 'Pilih Tanggal Awal',
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.calendar_today),
-                          onPressed: () =>
-                              _selectDate(context, tanggalAwalController),
+                    child: GestureDetector(
+                      onTap: () => _selectDateAwal(context),
+                      child: AbsorbPointer(
+                        child: CustomFormField(
+                          controller: tanggalAwall,
+                          labelText: '',
+                          hintText: 'Pilih Tanggal Awal',
+                          errorText: _tanggalawalError.isNotEmpty
+                              ? _tanggalawalError
+                              : null,
+                          suffixIcon: Icon(Icons.calendar_today),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        errorText: _tanggalAwalError.isNotEmpty
-                            ? _tanggalAwalError
-                            : null,
                       ),
-                      readOnly: true,
                     ),
                   ),
                 ],
@@ -209,23 +468,19 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
                 children: [
                   const SizedBox(width: 60, child: Text('Akhir')),
                   Expanded(
-                    child: TextField(
-                      controller: tanggalAkhirController,
-                      decoration: InputDecoration(
-                        hintText: 'Pilih Tanggal Akhir',
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.calendar_today),
-                          onPressed: () =>
-                              _selectDate(context, tanggalAkhirController),
+                    child: GestureDetector(
+                      onTap: () => _selectDateAkhir(context),
+                      child: AbsorbPointer(
+                        child: CustomFormField(
+                          controller: tanggalAkhirr,
+                          labelText: '',
+                          hintText: 'Pilih Tanggal akhir',
+                          errorText: _tanggalakhirError.isNotEmpty
+                              ? _tanggalakhirError
+                              : null,
+                          suffixIcon: Icon(Icons.calendar_today),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        errorText: _tanggalAkhirError.isNotEmpty
-                            ? _tanggalAkhirError
-                            : null,
                       ),
-                      readOnly: true,
                     ),
                   ),
                 ],
@@ -234,60 +489,41 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
 
               // Chart
               Container(
-                height: 300,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: BarChart(
-                  BarChartData(
-                    alignment: BarChartAlignment.spaceAround,
-                    maxY: 8,
-                    barTouchData: BarTouchData(enabled: true),
-                    titlesData: FlTitlesData(
-                      show: true,
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            return Text(
-                              days[value.toInt()],
-                              style: const TextStyle(fontSize: 12),
-                            );
-                          },
-                        ),
-                      ),
-                      leftTitles: const AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 30,
-                        ),
-                      ),
-                      topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false)),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    barGroups: chartData.asMap().entries.map((entry) {
-                      return BarChartGroupData(
-                        x: entry.key,
-                        barRods: [
-                          BarChartRodData(
-                            toY: entry.value,
-                            color: Colors.blue,
-                            width: 20,
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(4),
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ),
-              ),
+                  child: _isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : BarChart(
+                          BarChartData(
+                            titlesData: FlTitlesData(
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget:
+                                      (double value, TitleMeta meta) {
+                                    int index = value.toInt();
+                                    if (index == 0 &&
+                                        tanggalLabels.isNotEmpty) {
+                                      // Tampilkan tanggal pertama
+                                      return Text(tanggalLabels.first);
+                                    } else if (index == barData.length - 1 &&
+                                        tanggalLabels.isNotEmpty) {
+                                      // Tampilkan tanggal terakhir
+                                      return Text(tanggalLabels.last);
+                                    } else {
+                                      // Sembunyikan label tanggal untuk data lainnya
+                                      return const Text('');
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                            barGroups: barData,
+                          ),
+                        )),
               const SizedBox(height: 30),
 
               // Tabel
@@ -408,8 +644,8 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
 
   @override
   void dispose() {
-    tanggalAwalController.removeListener(_clearTanggalAwalError);
-    tanggalAkhirController.removeListener(_clearTanggalAkhirError);
+    tanggalAwall.removeListener(_clearTanggalAwalError);
+    tanggalAkhirr.removeListener(_clearTanggalAkhirError);
     super.dispose();
   }
 }

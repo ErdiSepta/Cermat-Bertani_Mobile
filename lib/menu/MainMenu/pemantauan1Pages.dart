@@ -1,3 +1,4 @@
+import 'package:apps/SendApi/ghApi.dart';
 import 'package:apps/menu/MainMenu/hamaPenyakitPages.dart';
 import 'package:apps/menu/MainMenu/isiPanenPages.dart';
 import 'package:apps/menu/MainMenu/pantauLingkunganPages.dart';
@@ -28,7 +29,7 @@ class PemantauanPage extends StatelessWidget {
           style: TextStyle(
             color: Colors.white,
             fontSize: 25,
-            fontFamily: 'OdorMeanChey',  // Mengubah font family sesuai topnav
+            fontFamily: 'OdorMeanChey', // Mengubah font family sesuai topnav
           ),
         ),
         backgroundColor: Colors.blue,
@@ -40,83 +41,42 @@ class PemantauanPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 35.0, vertical: 35.0),
           child: Column(
             children: [
-              buildMenuButton(
+              buildMenuButtonTP(
                 context,
                 'assets/images/tatacara.png', // Sesuaikan path gambar
                 'Tatacara Penggunaan',
-                () {
-                  Navigator.push(
-                    context,
-                    SmoothPageTransition(
-                      page: const tatacaraPemantauanPages(),
-                    ),
-                  );
-                }, // Tambahkan navigasi
+                tatacaraPemantauanPages(),
+                // Tambahkan navigasi
               ),
               buildMenuButton(
                 context,
                 'assets/images/pantau lingkungan.png',
                 'Pantau Lingkungan',
-                () {
-                  Navigator.push(
-                    context,
-                    SmoothPageTransition(
-                      page: const PantauLingkunganPages(),
-                    ),
-                  );
-                },
+                PantauLingkunganPages(),
               ),
               buildMenuButton(
                 context,
                 'assets/images/pantau tanaman.png',
                 'Pantau Tanaman',
-                () {
-                  Navigator.push(
-                    context,
-                    SmoothPageTransition(
-                      page: const PantauTanamanPages(),
-                    ),
-                  );
-                },
+                PantauTanamanPages(),
               ),
               buildMenuButton(
                 context,
                 'assets/images/hama.png',
                 'Hama & Penyakit',
-                () {
-                  Navigator.push(
-                    context,
-                    SmoothPageTransition(
-                      page: const HamaPenyakitPages(),
-                    ),
-                  );
-                },
+                HamaPenyakitPages(),
               ),
               buildMenuButton(
                 context,
                 'assets/images/pembudidayaan.png',
                 'Pembudidayaan',
-                () {
-                  Navigator.push(
-                    context,
-                    SmoothPageTransition(
-                      page: const PembudidayaanPages(),
-                    ),
-                  );
-                },
+                PembudidayaanPages(),
               ),
               buildMenuButton(
                 context,
                 'assets/images/panen.png',
                 'Isi Panen',
-                () {
-                  Navigator.push(
-                    context,
-                    SmoothPageTransition(
-                      page: const IsiPanenPages(),
-                    ),
-                  );
-                },
+                IsiPanenPages(),
               ),
             ],
           ),
@@ -126,7 +86,7 @@ class PemantauanPage extends StatelessWidget {
   }
 
   Widget buildMenuButton(
-      BuildContext context, String imagePath, String text, VoidCallback onTap) {
+      BuildContext context, String imagePath, String text, Widget page) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 15),
       child: Container(
@@ -145,7 +105,90 @@ class PemantauanPage extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: onTap,
+            onTap: () async {
+              final result = await ghApi.getDataGh();
+              if (result?['data_gh'] != null && result?['data_gh'] != '[]') {
+                print(result?['data_gh']);
+                Navigator.push(context, SmoothPageTransition(page: page));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Anda belum memiliki Green House!')),
+                );
+              }
+            },
+            child: Row(
+              children: [
+                Container(
+                  width: 100,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      bottomLeft: Radius.circular(12),
+                    ),
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(11),
+                      bottomLeft: Radius.circular(11),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset(
+                        imagePath,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: const TextStyle(
+                      fontFamily: 'NotoSan',
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildMenuButtonTP(
+      BuildContext context, String imagePath, String text, Widget page) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 15),
+      child: Container(
+        width: double.infinity,
+        height: 80,
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.black,
+            width: 0.8,
+          ),
+          // Menghapus boxShadow property
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              Navigator.push(context, SmoothPageTransition(page: page));
+            },
             child: Row(
               children: [
                 Container(

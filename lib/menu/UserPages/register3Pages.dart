@@ -1,3 +1,4 @@
+import 'package:apps/SendApi/userApi.dart';
 import 'package:apps/menu/UserPages/register4Pages.dart';
 import 'package:apps/src/customColor.dart';
 import 'package:apps/src/customFormfield.dart';
@@ -6,7 +7,21 @@ import 'package:lottie/lottie.dart';
 import 'package:apps/src/customConfirmDialog.dart';
 
 class Register3 extends StatefulWidget {
-  const Register3({super.key});
+  final String nik;
+  final String email;
+  final String nama;
+  final String gender;
+  final String noHp;
+  final String alamat;
+
+  const Register3(
+      {super.key,
+      required this.nik,
+      required this.email,
+      required this.nama,
+      required this.gender,
+      required this.noHp,
+      required this.alamat});
 
   @override
   _Register3State createState() => _Register3State();
@@ -17,6 +32,7 @@ class _Register3State extends State<Register3> {
   bool _isConfirmPasswordVisible = false;
   double _strength = 0;
   bool _isLoading = false;
+  String _password = '';
 
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
@@ -40,24 +56,35 @@ class _Register3State extends State<Register3> {
     }
   }
 
+  RegExp numReg = RegExp(r".*[0-9].*");
+  RegExp letterReg = RegExp(r".*[A-Za-z].*");
+
   void _checkPassword(String value) {
-    setState(() {
-      if (value.isEmpty) {
+    _password = value.trim();
+
+    if (_password.isEmpty) {
+      setState(() {
         _strength = 0;
-      } else if (value.length < 6) {
+      });
+    } else if (_password.length < 6) {
+      setState(() {
         _strength = 1 / 4;
-      } else if (value.length < 8) {
+      });
+    } else if (_password.length < 8) {
+      setState(() {
         _strength = 2 / 4;
-      } else {
-        if (!RegExp(
-                r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$')
-            .hasMatch(value)) {
+      });
+    } else {
+      if (!letterReg.hasMatch(_password) || !numReg.hasMatch(_password)) {
+        setState(() {
           _strength = 3 / 4;
-        } else {
+        });
+      } else {
+        setState(() {
           _strength = 1;
-        }
+        });
       }
-    });
+    }
   }
 
   void _handleNext() async {
@@ -72,16 +99,67 @@ class _Register3State extends State<Register3> {
     if (confirm) {
       setState(() {
         _isLoading = true;
+        _registerUser();
       });
 
       // Simulasi loading 2 detik
-      Future.delayed(const Duration(seconds: 2), () {
+    }
+  }
+
+  void showDataPrint() {
+    print("data : " + widget.nik);
+    print("data : " + widget.nama);
+    print("data : " + widget.gender);
+    print("data : " + widget.noHp);
+    print("data : " + widget.alamat);
+    print("data : " + widget.email);
+    print("data : " + _passwordController.text);
+    print("data : " + _confirmPasswordController.text);
+  }
+
+  Future<void> _registerUser() async {
+    final result = await UserApi.register(
+        widget.nik,
+        widget.nama,
+        widget.gender,
+        widget.noHp,
+        widget.alamat,
+        widget.email,
+        _passwordController.text,
+        _confirmPasswordController.text);
+    showDataPrint();
+    if (result != null) {
+      if (result['status'] == "success") {
+        print("Result : " + result.toString());
+        // Berhasil mendaftar
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const Register4pages()),
         );
-      });
+      } else if (result['status'] == "error") {
+        print("Resultt : " + result.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Pendaftaran gagal: ${result['message']}')),
+        );
+      } else {
+        print("Resulttt : " + result.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('Pendaftaran gagal: ada kesalahan pengiriman data')),
+        );
+      }
+    } else {
+      print("gagal : " + result.toString());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Pendaftaran gagal: ada kesalahan pengiriman data')),
+      );
     }
+
+    setState(() {
+      _isLoading = false; // Menyembunyikan loading setelah permintaan selesai
+    });
   }
 
   @override

@@ -1,3 +1,5 @@
+import 'package:apps/SendApi/userApi.dart';
+import 'package:apps/menu/Models/RegisterModels.dart';
 import 'package:apps/menu/UserPages/register2Pages.dart';
 import 'package:apps/src/customColor.dart';
 import 'package:apps/src/customFormfield.dart';
@@ -147,19 +149,44 @@ class _RegisterState extends State<Register> {
         _alamatError.isEmpty &&
         _genderError.isEmpty &&
         _noHpError.isEmpty) {
-      bool confirm = await CustomConfirmDialog.show(
-        context: context,
-        title: 'Konfirmasi',
-        message: 'Apakah data yang anda masukkan sudah benar?',
-        confirmText: 'Ya',
-        cancelText: 'Tidak',
-      );
-
-      if (confirm) {
-        Navigator.push(
-          context,
-          SmoothPageTransition(page: const Register2()),
+      // Memeriksa ketersediaan email
+      String? emailCheckMessage =
+          await UserApi.checkEmailAvailability(_emailController.text);
+      if (emailCheckMessage == "success") {
+        bool confirm = await CustomConfirmDialog.show(
+          context: context,
+          title: 'Konfirmasi',
+          message: 'Apakah data yang anda masukkan sudah benar?',
+          confirmText: 'Ya',
+          cancelText: 'Tidak',
         );
+        if (confirm) {
+          // Membuat objek RegisterData
+          final registerData = RegisterData(
+            nik: _nikController.text,
+            email: _emailController.text,
+            nama: _namaController.text,
+            gender: _selectedGender!,
+            noHp: _noHpController.text,
+            alamat: _alamatController.text,
+          );
+          Navigator.push(
+            context,
+            SmoothPageTransition(
+              page: Register2(registerData: registerData),
+            ),
+          );
+        }
+        return;
+        // Mengirim data ke halaman Register2
+      } else {
+        setState(() {
+          _emailError = emailCheckMessage
+              .toString(); // Tampilkan pesan error jika email sudah digunakan
+          print(emailCheckMessage);
+        });
+        print(emailCheckMessage);
+        return;
       }
     }
   }
@@ -263,7 +290,7 @@ class _RegisterState extends State<Register> {
                       value: _selectedGender,
                       isExpanded: true,
                       hint: const Text('Pilih Jenis Kelamin'),
-                      items: <String>['Laki-laki', 'Perempuan']
+                      items: <String>['laki-laki', 'perempuan']
                           .map((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
