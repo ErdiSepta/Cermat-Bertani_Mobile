@@ -80,7 +80,7 @@ class _LupaPassword2State extends State<LupaPassword2> {
   }
 
   void validateOTP() async {
-    bool isValid = await EmailOTP.verifyOTP(otp: pinController.text);
+    bool isValid = EmailOTP.verifyOTP(otp: pinController.text);
     setState(() {
       _otpError = isValid ? '' : 'Kode OTP salah atau tidak valid.';
     });

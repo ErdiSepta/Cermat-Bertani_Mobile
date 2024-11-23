@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'package:apps/SendApi/tokenJWT.dart';
 import 'package:apps/src/pageTransition.dart';
-import 'package:crypto/crypto.dart';
 
 import 'package:apps/SendApi/Server.dart';
 import 'package:apps/SendApi/userApi.dart';
@@ -62,9 +62,9 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
 //Awal backend
 
   Future<void> showProfil() async {
-    final result = await UserApi.getProfil(Login.email);
-    print('result : ' + result.toString());
-    print(Login.token);
+    String? email = await TokenJwt.getEmail();
+    String? token = await TokenJwt.getToken();
+    final result = await UserApi.getProfil(email.toString());
     if (result != null) {
       if (result['status'] == "success") {
         if (result['data']['foto'] != null) {
@@ -84,19 +84,20 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
         } else {
           jumlah_gh = result['jumlah_greenhouse'];
         }
-        ;
         print(nama_lengkap);
         namaLengkapController.text = nama_lengkap;
         nikController.text = nik;
         noHpController.text = no_hp;
         alamatController.text = alamat;
-        jumlahGHController.text = "${jumlah_gh}";
+        jumlahGHController.text = "$jumlah_gh";
       } else if (result['status'] == "error" &&
           result['message'] == "token error must login") {
-        print("Resultt : " + result.toString());
+        print("Resultt : $result");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Pengambilan Data gagal: ${result['message']}')),
+          SnackBar(content: Text('Pengambilan data gagal email: ${email}}')),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Pengambilan data gagal token: ${token}')),
         );
         Navigator.pushAndRemoveUntil(
           context,
@@ -104,13 +105,13 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
           (route) => false, // Ini akan menghapus semua halaman sebelumnya
         );
       } else if (result['status'] == "error") {
-        print("Resultt : " + result.toString());
+        print("Resultt : $result");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text('Pengambilan data gagal: ${result['message']}')),
         );
       } else {
-        print("Resulttt : " + result.toString());
+        print("Resulttt : $result");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content:
@@ -118,7 +119,7 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
         );
       }
     } else {
-      print("gagal : " + result.toString());
+      print("gagal : $result");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text('Pendaftaran gagal: ada kesalahan pengiriman data')),
@@ -131,7 +132,8 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
   }
 
   Future<void> postDataToServer() async {
-    // Persiapkan data yang akan dikirim
+    String? email =
+        await TokenJwt.getEmail(); // Persiapkan data yang akan dikirim
     Map<String, dynamic> data = {
       'nik': nikController.text,
       'nama_lengkap': namaLengkapController.text,
@@ -139,29 +141,27 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
       'jenis_kelamin': jenis_kelamin,
       'no_telpon': noHpController.text,
       'foto': ImageSaatIni,
-      'email': Login.email,
+      'email': email.toString(),
     };
 
     // Buat request POST ke URL server
     Uri url = Server.urlLaravel("users/profile/profile");
 
     try {
-      // Kirim request POST ke server
+      String? token = await TokenJwt.getToken();
       final response = await http.post(url,
           headers: {
             "Content-Type": "application/json",
-            "Authorization": Login.token
+            "Authorization": token.toString()
           },
           body: json.encode(data));
 
       // Periksa kode status respons
       if (response.statusCode == 200) {
         final result = json.decode(response.body);
-        Login.token = result['data'].toString();
+        await TokenJwt.saveToken(result['data'].toString());
         print(result['data']);
-        if (ImageSaatIni != null) {
-          _uploadImage();
-        }
+        _uploadImage();
         // final decodedPayload = _parseJwt(jwtToken);
 
         print('Data berhasil dikirim');
@@ -180,7 +180,7 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal mengirim data. keterangan : $error')),
       );
-      print('Terjadi kesalahan1: ${url} ');
+      print('Terjadi kesalahan1: $url ');
       print('Terjadi kesalahan2: ${json.encode(data)} ');
       print('Terjadi kesalahan3: $error ');
     }
@@ -380,7 +380,7 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
       setState(() {
         _profileImage = File(pickedFile.path);
         ImageSaatIni = _encodeBase64(pickedFile.name);
-        print("GAMBAR : " + ImageSaatIni);
+        print("GAMBAR : $ImageSaatIni");
       });
     }
   }

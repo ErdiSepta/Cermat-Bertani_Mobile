@@ -1,32 +1,26 @@
 import 'dart:convert';
 import 'package:apps/SendApi/Server.dart';
+import 'package:apps/SendApi/tokenJWT.dart';
 import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:http/http.dart' as http;
 
 class HomeApi {
-  static Future<Map<String, dynamic>?> showChartHome(String jenis_data,
-      String tanggal_awal, String tanggal_akhir, String id) async {
+  static Future<Map<String, dynamic>?> showChartHome(String jenisData,
+      String tanggalAwal, String tanggalAkhir, String id) async {
+    String? token = await TokenJwt.getToken();
+    String? email = await TokenJwt.getEmail();
     final response = await http.post(
       Server.urlLaravel("dashboard"),
       headers: {
         "Content-Type": "application/json",
-        "Authorization": Login.token
+        "Authorization": token.toString()
       },
       body: json.encode({
-        "jenis_data": jenis_data,
-        "tanggal_awal": tanggal_awal,
-        "tanggal_akhir": tanggal_akhir,
+        "jenis_data": jenisData,
+        "tanggal_awal": tanggalAwal,
+        "tanggal_akhir": tanggalAkhir,
         "id_gh": id,
-        "email": Login.email,
-      }),
-    );
-    print(
-      json.encode({
-        "jenis_data": jenis_data,
-        "tanggal_awal": tanggal_awal,
-        "tanggal_akhir": tanggal_akhir,
-        "id_gh": id,
-        "email": Login.email,
+        "email": email.toString(),
       }),
     );
     if (response.statusCode == 200) {

@@ -1,6 +1,5 @@
 import 'package:apps/SendApi/userApi.dart';
 import 'package:apps/menu/UserPages/lupapassword2pages.dart';
-import 'package:apps/src/customConfirmDialog.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
@@ -23,28 +22,32 @@ class _Lupapassword1State extends State<Lupapassword1> {
         _emailError = 'Email tidak boleh kosong';
       } else if (!_emailController.text.contains('@gmail.com')) {
         _emailError = 'Email Tidak Valid';
+      } else if (_emailController.text.length <= 10) {
+        _emailError = 'Email Tidak Valid';
       } else {
         _emailError = '';
       }
     });
-    String? emailCheckMessage =
-        await UserApi.checkEmailAvailability(_emailController.text);
-    if (emailCheckMessage != "success") {
-      Navigator.push(
-        context,
-        SmoothPageTransition(
-            page: LupaPassword2(
-          email: _emailController.text,
-        )),
-      );
-      return;
-    } else {
-      setState(() {
-        _emailError = "Email Belum Terdaftar!";
+    if (_emailError == '') {
+      String? emailCheckMessage =
+          await UserApi.checkEmailAvailability(_emailController.text);
+      if (emailCheckMessage != "success") {
+        Navigator.push(
+          context,
+          SmoothPageTransition(
+              page: LupaPassword2(
+            email: _emailController.text,
+          )),
+        );
+        return;
+      } else {
+        setState(() {
+          _emailError = "Email Belum Terdaftar!";
+          print(emailCheckMessage);
+        });
         print(emailCheckMessage);
-      });
-      print(emailCheckMessage);
-      return;
+        return;
+      }
     }
   }
 

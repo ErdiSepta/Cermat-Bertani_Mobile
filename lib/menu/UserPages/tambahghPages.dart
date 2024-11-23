@@ -1,4 +1,5 @@
 import 'package:apps/SendApi/Server.dart';
+import 'package:apps/SendApi/tokenJWT.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:apps/src/topnav.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,7 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
       setState(() {
         _profileImage = File(pickedFile.path);
         ImageSaatIni = _encodeBase64(pickedFile.name);
-        print("GAMBAR : " + ImageSaatIni);
+        print("GAMBAR : $ImageSaatIni");
       });
     }
   }
@@ -54,7 +55,8 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
   }
 
   Future<void> postDataToServer() async {
-    // Persiapkan data yang akan dikirim
+    String? email =
+        await TokenJwt.getEmail(); // Persiapkan data yang akan dikirim
     Map<String, dynamic> data = {
       'nama_gh': namaController.text,
       'fokus_gh': fokusController.text,
@@ -62,19 +64,20 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
       'alamat_gh': alamatController.text,
       'luasgh': luasController.text,
       'populasi': lubangController.text,
+      'tanggal': tanggalController.text,
       'foto_gh': ImageSaatIni,
-      'email': Login.email,
+      'email': email.toString(),
     };
 
     // Buat request POST ke URL server
     Uri url = Server.urlLaravel("green-house/tambah");
 
     try {
-      // Kirim request POST ke server
+      String? token = await TokenJwt.getToken();
       final response = await http.post(url,
           headers: {
             "Content-Type": "application/json",
-            "Authorization": Login.token
+            "Authorization": token.toString()
           },
           body: json.encode(data));
 
@@ -107,7 +110,7 @@ class _TambahghpagePagesState extends State<TambahghpagePages> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal mengirim data. keterangan : $error')),
       );
-      print('Terjadi kesalahan1: ${url} ');
+      print('Terjadi kesalahan1: $url ');
       print('Terjadi kesalahan2: ${json.encode(data)} ');
       print('Terjadi kesalahan3: $error ');
     }

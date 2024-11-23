@@ -107,14 +107,14 @@ class _Register3State extends State<Register3> {
   }
 
   void showDataPrint() {
-    print("data : " + widget.nik);
-    print("data : " + widget.nama);
-    print("data : " + widget.gender);
-    print("data : " + widget.noHp);
-    print("data : " + widget.alamat);
-    print("data : " + widget.email);
-    print("data : " + _passwordController.text);
-    print("data : " + _confirmPasswordController.text);
+    print("data : ${widget.nik}");
+    print("data : ${widget.nama}");
+    print("data : ${widget.gender}");
+    print("data : ${widget.noHp}");
+    print("data : ${widget.alamat}");
+    print("data : ${widget.email}");
+    print("data : ${_passwordController.text}");
+    print("data : ${_confirmPasswordController.text}");
   }
 
   Future<void> _registerUser() async {
@@ -130,19 +130,19 @@ class _Register3State extends State<Register3> {
     showDataPrint();
     if (result != null) {
       if (result['status'] == "success") {
-        print("Result : " + result.toString());
+        print("Result : $result");
         // Berhasil mendaftar
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const Register4pages()),
         );
       } else if (result['status'] == "error") {
-        print("Resultt : " + result.toString());
+        print("Resultt : $result");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Pendaftaran gagal: ${result['message']}')),
         );
       } else {
-        print("Resulttt : " + result.toString());
+        print("Resulttt : $result");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content:
@@ -150,7 +150,7 @@ class _Register3State extends State<Register3> {
         );
       }
     } else {
-      print("gagal : " + result.toString());
+      print("gagal : $result");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text('Pendaftaran gagal: ada kesalahan pengiriman data')),

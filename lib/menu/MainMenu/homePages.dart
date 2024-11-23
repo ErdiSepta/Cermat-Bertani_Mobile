@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import 'package:apps/SendApi/HomeApi.dart';
 import 'package:apps/SendApi/ghApi.dart';
+import 'package:apps/SendApi/tokenJWT.dart';
 import 'package:apps/SendApi/userApi.dart';
 import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:apps/src/customFormfield.dart';
@@ -21,14 +20,15 @@ class _HomepageState extends State<Homepage> {
   String DP_ppm_tanaman = "0";
   String DP_suhu_tanaman = "0";
   String DP_kelembapan_tanaman = "0";
-  String _tanggalawalError = '';
-  String _tanggalakhirError = '';
+  final String _tanggalawalError = '';
+  final String _tanggalakhirError = '';
   String? selectedJenisData;
   final tanggalAwall = TextEditingController();
   final tanggalAkhirr = TextEditingController();
   @override
   void initState() {
     super.initState();
+
     showProfil();
     showDataGh();
   }
@@ -94,17 +94,18 @@ class _HomepageState extends State<Homepage> {
     loadChartData();
   }
 
-  DateTime? _selectedDate;
+  DateTime? _selectedDateAw;
+  DateTime? _selectedDateAk;
   Future<void> _selectDateAwal(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
+      initialDate: _selectedDateAw ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null && picked != _selectedDateAw) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDateAw = picked;
         tanggalAwall.text = "${picked.year}-${picked.month}-${picked.day}";
         _onFiltersChanged();
       });
@@ -114,13 +115,13 @@ class _HomepageState extends State<Homepage> {
   Future<void> _selectDateAkhir(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
+      initialDate: _selectedDateAk ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null && picked != _selectedDateAk) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDateAk = picked;
         tanggalAkhirr.text = "${picked.year}-${picked.month}-${picked.day}";
         _onFiltersChanged();
       });
@@ -130,14 +131,15 @@ class _HomepageState extends State<Homepage> {
   bool _isLoading = false;
   String nama = "...";
   Future<void> showProfil() async {
-    final result = await UserApi.getProfil(Login.email);
+    String? email = await TokenJwt.getEmail();
+    final result = await UserApi.getProfil(email.toString());
     if (result != null) {
       if (result['status'] == "success") {
         nama = result['data']['nama_lengkap'];
       } else if (result['status'] == "error") {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Pengambilan data gagal: ${result['message']}')),
+              content: Text('Pengambilan data gagal : ${result['message']}')),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -225,7 +227,7 @@ class _HomepageState extends State<Homepage> {
             Padding(
               padding: const EdgeInsets.all(30),
               child: Text(
-                'Selamat Datang, ' + nama,
+                'Selamat Datang, $nama',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

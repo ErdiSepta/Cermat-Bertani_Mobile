@@ -1,3 +1,4 @@
+import 'package:apps/SendApi/tokenJWT.dart';
 import 'package:apps/SendApi/userApi.dart';
 import 'package:apps/main.dart';
 import 'package:apps/menu/UserPages/loginPages.dart';
@@ -18,7 +19,7 @@ class _SplashscreenState extends State<Splashscreen>
   int _currentIndex = 0;
 
   @override
-  void initState() {
+  void initState() async {
     super.initState();
     _controller = AnimationController(
       vsync: this,
@@ -29,10 +30,10 @@ class _SplashscreenState extends State<Splashscreen>
         });
       });
     _controller.repeat();
-
+    String? token = await TokenJwt.getToken();
     // Logika navigasi
     Future.delayed(const Duration(seconds: 3), () {
-      if (Login.email.isNotEmpty) {
+      if (token.toString().isNotEmpty) {
         showProfil();
       } else {
         Navigator.of(context).pushReplacement(
@@ -43,7 +44,8 @@ class _SplashscreenState extends State<Splashscreen>
   }
 
   Future<void> showProfil() async {
-    final result = await UserApi.getProfil(Login.email);
+    String? email = await TokenJwt.getEmail();
+    final result = await UserApi.getProfil(email.toString());
     if (result == null) {
       Navigator.of(context).pushReplacement(
         SmoothPageTransition(page: const Login()),

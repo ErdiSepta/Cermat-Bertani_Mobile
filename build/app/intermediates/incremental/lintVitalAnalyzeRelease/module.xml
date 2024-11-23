@@ -1,0 +1,18 @@
+<lint-module
+    format="1"
+    dir="D:\FlutterProject\Cermat-Bertani_Mobile\android\app"
+    name=":app"
+    type="APP"
+    maven="android:app:"
+    agpVersion="8.1.0"
+    buildFolder="D:\FlutterProject\Cermat-Bertani_Mobile\build\app"
+    bootClassPath="C:\Users\User\AppData\Local\Android\sdk\platforms\android-34\android.jar;C:\Users\User\AppData\Local\Android\sdk\build-tools\33.0.1\core-lambda-stubs.jar"
+    javaSourceLevel="1.8"
+    compileTarget="android-34">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>

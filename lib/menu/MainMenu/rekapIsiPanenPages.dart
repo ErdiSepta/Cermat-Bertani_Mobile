@@ -1,12 +1,9 @@
 import 'dart:io';
-import 'package:apps/menu/UserPages/loginPages.dart';
-import 'package:meta/meta.dart';
 import 'package:intl/intl.dart';
 
 import 'package:apps/SendApi/PanenApi.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:flutter/material.dart';
-import 'package:apps/src/customDropdown.dart';
 import 'package:apps/src/topnav.dart';
 
 import 'package:path_provider/path_provider.dart';
@@ -60,8 +57,8 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
               data['berat_buah'].toString(),
               data['ukuran_buah'].toString(),
               data['rasa_buah'].toString(),
-              data['biaya_operasional'].toString(),
-              data['pendapatan_penjualan'].toString(),
+              "${formatRupiah(data['biaya_operasional'].toString())}",
+              "${formatRupiah(data['pendapatan_penjualan'].toString())}",
             ];
           }).toList();
 
@@ -148,10 +145,10 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
                 'Tidak ada data pada tanggal dan Green house yang di pilih')),
       );
     } else if (result['status'] == 'success') {
-      List<dynamic> tabel_data = result['data'];
+      List<dynamic> tabelData = result['data'];
 
       setState(() {
-        rekapData = tabel_data.asMap().entries.map((entry) {
+        rekapData = tabelData.asMap().entries.map((entry) {
           // Memproses setiap entry menjadi Map<String, dynamic>
           return {
             "tanggal_panen": entry.value['tanggal_panen'],
@@ -172,7 +169,7 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${result?['message']}')),
+        SnackBar(content: Text('${result['message']}')),
       );
     }
   }
@@ -182,17 +179,18 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
     loadChartData();
   }
 
-  DateTime? _selectedDate;
+  DateTime? _selectedDateAw;
+  DateTime? _selectedDateAk;
   Future<void> _selectDateAwal(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
+      initialDate: _selectedDateAw ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null && picked != _selectedDateAw) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDateAw = picked;
         tanggalAwall.text = "${picked.year}-${picked.month}-${picked.day}";
         _onFiltersChanged();
       });
@@ -202,13 +200,13 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
   Future<void> _selectDateAkhir(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
+      initialDate: _selectedDateAk ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null && picked != _selectedDateAk) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDateAk = picked;
         tanggalAkhirr.text = "${picked.year}-${picked.month}-${picked.day}";
         _onFiltersChanged();
       });
@@ -259,7 +257,6 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
   void initState() {
     super.initState();
     showDataGh();
-    print(Login.token);
     tanggalAwall.addListener(_clearTanggalAwalError);
     tanggalAkhirr.addListener(_clearTanggalAkhirError);
   }

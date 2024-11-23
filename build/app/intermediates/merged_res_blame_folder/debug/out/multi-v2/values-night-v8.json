@@ -4,7 +4,7 @@
             "outputFile": "com.example.apps.app-mergeDebugResources-27:/values-night-v8/values-night-v8.xml",
             "map": [
                 {
-                    "source": "C:\\xampp\\htdocs\\Cermat-Bertani_Mobile\\android\\app\\src\\main\\res\\values-night\\styles.xml",
+                    "source": "D:\\FlutterProject\\Cermat-Bertani_Mobile\\android\\app\\src\\main\\res\\values-night\\styles.xml",
                     "from": {
                         "startLines": "3,14",
                         "startColumns": "4,4",

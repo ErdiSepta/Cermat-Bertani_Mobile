@@ -1,41 +1,63 @@
 import 'dart:convert';
 import 'package:apps/SendApi/Server.dart';
+import 'package:apps/SendApi/tokenJWT.dart';
 import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:http/http.dart' as http;
 
 class HamaAndPenyakitApi {
+  static Future<Map<String, dynamic>?> showRekapHamaPenyakit(
+      String tanggalAwal, String tanggalAkhir, String id) async {
+    String? token = await TokenJwt.getToken();
+    String? email = await TokenJwt.getEmail();
+    final response = await http.post(
+      Server.urlLaravel("hama-penyakit"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token.toString()
+      },
+      body: json.encode({
+        "tanggal_awal": tanggalAwal,
+        "tanggal_akhir": tanggalAkhir,
+        "id_gh": id,
+        "email": email.toString(),
+      }),
+    );
+    if (response.statusCode == 200) {
+      final result = json.decode(response.body);
+
+      return result;
+    } else if (response.statusCode == 400) {
+      final result = json.decode(response.body);
+      return result;
+    } else {
+      print(response.body);
+      return null;
+    }
+  }
+
   static Future<Map<String, dynamic>?> tambahHamaAndPenyakit(
-      String warna_daun,
-      String warna_batang,
-      String serangan_hama,
-      String cara_penanganan,
-      String jml_pestisida,
+      String warnaDaun,
+      String warnaBatang,
+      String seranganHama,
+      String caraPenanganan,
+      String jmlPestisida,
       String id) async {
+    String? token = await TokenJwt.getToken();
+    String? email = await TokenJwt.getEmail();
     final response = await http.post(
       Server.urlLaravel("hama-penyakit/tambah"),
       headers: {
         "Content-Type": "application/json",
-        "Authorization": Login.token
+        "Authorization": token.toString()
       },
       body: json.encode({
-        "warna_daun": warna_daun,
-        "warna_batang": warna_batang,
-        "serangan_hama": serangan_hama,
-        "cara_penanganan": cara_penanganan,
-        "jml_pestisida": jml_pestisida,
+        "warna_daun": warnaDaun,
+        "warna_batang": warnaBatang,
+        "serangan_hama": seranganHama,
+        "cara_penanganan": caraPenanganan,
+        "jml_pestisida": jmlPestisida,
         "id_gh": id,
-        "email": Login.email,
-      }),
-    );
-    print(
-      json.encode({
-        "warna_daun": warna_daun,
-        "warna_batang": warna_batang,
-        "serangan_hama": serangan_hama,
-        "cara_penanganan": cara_penanganan,
-        "jml_pestisida": jml_pestisida,
-        "id_gh": id,
-        "email": Login.email,
+        "email": email.toString(),
       }),
     );
     if (response.statusCode == 200) {

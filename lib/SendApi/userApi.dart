@@ -1,22 +1,25 @@
 import 'dart:convert';
 import 'package:apps/SendApi/Server.dart';
+import 'package:apps/SendApi/tokenJWT.dart';
 import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:http/http.dart' as http;
 
 class UserApi {
   static Future<Map<String, dynamic>?> GantiPasswordProfil(
-      String password_old, String password, String password_confirm) async {
+      String passwordOld, String password, String passwordConfirm) async {
+    String? token = await TokenJwt.getToken();
+    String? email = await TokenJwt.getEmail();
     final response = await http.put(
       Server.urlLaravel("users/profile/profile/password"),
       headers: {
         "Content-Type": "application/json",
-        "Authorization": Login.token
+        "Authorization": token.toString()
       },
       body: json.encode({
-        "password_old": password_old,
+        "password_old": passwordOld,
         "password": password,
-        "password_confirm": password_confirm,
-        "email": Login.email,
+        "password_confirm": passwordConfirm,
+        "email": email.toString(),
       }),
     );
 
@@ -34,11 +37,12 @@ class UserApi {
   }
 
   static Future<Map<String, dynamic>?> getProfil(String email) async {
+    String? token = await TokenJwt.getToken();
     final response = await http.post(
       Server.urlLaravel("users/profile"),
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "${Login.token}"
+        "Authorization": token.toString()
       },
       body: json.encode({
         "email": email,
@@ -77,6 +81,7 @@ class UserApi {
     } catch (e) {
       print('Error: $e');
     }
+    return null;
   }
 
   static Future<Map<String, dynamic>?> ForgotPassword(
@@ -105,6 +110,7 @@ class UserApi {
     } catch (e) {
       print('Errorr: $e');
     }
+    return null;
   }
 
   static Future<Map<String, dynamic>?> register(
@@ -159,7 +165,7 @@ class UserApi {
     if (response.statusCode == 200) {
       final result = json.decode(response.body);
       final jwtToken = result['data']; // ini token e
-      Login.token = result['data'].toString();
+      await TokenJwt.saveToken(jwtToken);
 
       final decodedPayload = _parseJwt(jwtToken);
       return decodedPayload;

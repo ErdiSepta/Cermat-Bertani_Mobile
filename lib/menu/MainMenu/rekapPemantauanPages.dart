@@ -1,11 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:meta/meta.dart';
 
 import 'package:apps/SendApi/HomeApi.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:flutter/material.dart';
-import 'package:apps/src/customDropdown.dart';
 import 'package:apps/src/topnav.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -104,10 +101,10 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
                   2: const pw.FlexColumnWidth(1), // PH
                   3: const pw.FlexColumnWidth(1), // PPM
                   4: const pw.FlexColumnWidth(1), // Suhu
-                  5: const pw.FlexColumnWidth(1), // Kelembapan
-                  6: const pw.FlexColumnWidth(1.5), // Tinggi Tanaman
-                  7: const pw.FlexColumnWidth(1.5), // Jumlah Daun
-                  8: const pw.FlexColumnWidth(1.5), // Berat Buah
+                  5: const pw.FlexColumnWidth(1.5), // Kelembapan
+                  6: const pw.FlexColumnWidth(1.3), // Tinggi Tanaman
+                  7: const pw.FlexColumnWidth(1.3), // Jumlah Daun
+                  8: const pw.FlexColumnWidth(1.3), // Berat Buah
                 },
               ),
             ],
@@ -160,10 +157,10 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
       );
     } else if (result['status'] == 'success') {
       List<dynamic> data = result['data'];
-      List<dynamic> tabel_data = result['tabel_data'];
+      List<dynamic> tabelData = result['tabel_data'];
 
       setState(() {
-        rekapData = tabel_data.asMap().entries.map((entry) {
+        rekapData = tabelData.asMap().entries.map((entry) {
           // Memproses setiap entry menjadi Map<String, dynamic>
           return {
             "tanggal": entry.value['tanggal'],
@@ -202,7 +199,7 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${result?['message']}')),
+        SnackBar(content: Text('${result['message']}')),
       );
     }
   }
@@ -212,17 +209,18 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
     loadChartData();
   }
 
-  DateTime? _selectedDate;
+  DateTime? _selectedDateAw;
+  DateTime? _selectedDateAk;
   Future<void> _selectDateAwal(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
+      initialDate: _selectedDateAw ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null && picked != _selectedDateAw) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDateAw = picked;
         tanggalAwall.text = "${picked.year}-${picked.month}-${picked.day}";
         _onFiltersChanged();
       });
@@ -232,13 +230,13 @@ class _RekapPemantauanPagesState extends State<RekapPemantauanPages> {
   Future<void> _selectDateAkhir(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
+      initialDate: _selectedDateAk ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null && picked != _selectedDateAk) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDateAk = picked;
         tanggalAkhirr.text = "${picked.year}-${picked.month}-${picked.day}";
         _onFiltersChanged();
       });

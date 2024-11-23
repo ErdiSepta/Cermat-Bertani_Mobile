@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:apps/SendApi/tokenJWT.dart';
 import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:http/http.dart' as http;
 import 'package:apps/SendApi/Server.dart';
@@ -36,13 +37,12 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
     foto = data['foto']!;
     tanggalGHController.text = formatTanggal(data['tanggal']!);
     metodePenanamanController.text = data['metode']!;
-    luasGHController.text = data['luas'] == null ? "" : data['luas'];
-    jumlahPopulasiController.text =
-        data['populasi'] == null ? "" : data['populasi'];
+    luasGHController.text = data['luas'] ?? "";
+    jumlahPopulasiController.text = data['populasi'] ?? "";
 
     // Menyimpan ID GH untuk kebutuhan lainnya
     _idGH = data['uuid']; // Menyimpan ID Greenhouse
-    print("id gh : " + _idGH.toString());
+    print("id gh : $_idGH");
   }
 
   // Definisi controller untuk setiap field secara manual
@@ -222,9 +222,9 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
     if (confirm) {
       final result = await ghApi.deleteDataGh(_idGH.toString());
       print(_idGH);
-      print("result : " + result.toString());
+      print("result : $result");
       if (result != null && result['data'] != null) {
-        Login.token = result['data'].toString();
+        await TokenJwt.saveToken(result['data'].toString());
         Navigator.of(context).pop();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -250,13 +250,14 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
       setState(() {
         _profileImage = File(pickedFile.path);
         ImageSaatIni = _encodeBase64(pickedFile.name);
-        print("GAMBAR : " + ImageSaatIni);
+        print("GAMBAR : $ImageSaatIni");
       });
     }
   }
 
   Future<void> postDataToServer() async {
-    // Persiapkan data yang akan dikirim
+    String? email =
+        await TokenJwt.getEmail(); // Persiapkan data yang akan dikirim
     Map<String, dynamic> data = {
       'id_gh': _idGH,
       'nama_gh': namaGHController.text,
@@ -267,31 +268,27 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
       'populasi': jumlahPopulasiController.text,
       'tanggal': tanggalGHController.text,
       'foto_gh': ImageSaatIni,
-      'email': Login.email,
+      'email': email.toString(),
     };
 
     // Buat request POST ke URL server
     Uri url = Server.urlLaravel("green-house/update");
-
+    print("Data yang di kirim : $data");
     try {
-      // Kirim request POST ke server
+      String? token = await TokenJwt.getToken();
       final response = await http.put(url,
           headers: {
             "Content-Type": "application/json",
-            "Authorization": Login.token
+            "Authorization": token.toString()
           },
           body: json.encode(data));
 
       // Periksa kode status respons
       if (response.statusCode == 200) {
         final result = json.decode(response.body);
-        print(result['data']);
-        if (ImageSaatIni != null) {
-          _uploadImage();
-        }
-        // final decodedPayload = _parseJwt(jwtToken);
-
-        print('Data berhasil dikirim');
+        print("Hasil pengiriman data : $result");
+        _uploadImage();
+        Navigator.pop(context);
       } else {
         // Gagal mengirim
         ScaffoldMessenger.of(context).showSnackBar(
@@ -304,7 +301,7 @@ class _ProfilGHPageState extends State<ProfilGHPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal mengirim data. keterangan : $error')),
       );
-      print('Terjadi kesalahan1: ${url} ');
+      print('Terjadi kesalahan1: $url ');
       print('Terjadi kesalahan2: ${json.encode(data)} ');
       print('Terjadi kesalahan3: $error ');
     }

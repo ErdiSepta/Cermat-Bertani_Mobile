@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import 'package:apps/SendApi/Server.dart';
 import 'package:apps/SendApi/ghApi.dart';
+import 'package:apps/SendApi/tokenJWT.dart';
 import 'package:apps/SendApi/userApi.dart';
 import 'package:apps/menu/UserPages/profilakunPages.dart';
 import 'package:apps/menu/UserPages/profilghPages.dart';
@@ -34,8 +33,10 @@ class _AkunpageState extends State<Akunpage> {
   }
 
   Future<void> showProfil() async {
-    final result = await UserApi.getProfil(Login.email);
-    print('result : ' + result.toString());
+    String? email1 = await TokenJwt.getEmail();
+    String? token = await TokenJwt.getToken();
+    final result = await UserApi.getProfil(email1.toString());
+    print('result : $result');
     if (result != null) {
       if (result['status'] == "success") {
         email = result['data']['email'];
@@ -44,13 +45,15 @@ class _AkunpageState extends State<Akunpage> {
           foto = result['data']['foto'];
         }
       } else if (result['status'] == "error") {
-        print("Resultt : " + result.toString());
+        print("Resultt : $result");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Pengambilan data gagal: ${result['message']}')),
+          SnackBar(content: Text('Pengambilan data gagal email: ${email1}}')),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Pengambilan data gagal token: ${token}')),
         );
       } else {
-        print("Resulttt : " + result.toString());
+        print("Resulttt : $result");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(
@@ -58,7 +61,7 @@ class _AkunpageState extends State<Akunpage> {
         );
       }
     } else {
-      print("gagal : " + result.toString());
+      print("gagal : $result");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content:
@@ -156,8 +159,8 @@ class _AkunpageState extends State<Akunpage> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () {
-                      Login.email = "";
-                      Login.token = "";
+                      TokenJwt.clearToken();
+                      TokenJwt.clearEmail();
                       Navigator.pushAndRemoveUntil(
                         context,
                         SmoothPageTransition(page: const Login()),

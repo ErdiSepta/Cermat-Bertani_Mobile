@@ -2,7 +2,6 @@ import 'package:apps/SendApi/PantauLingkunganApi.dart';
 import 'package:apps/SendApi/ghApi.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customFormfield.dart';
-import 'package:apps/src/customDropdown.dart';
 import 'package:apps/src/topnav.dart';
 import 'package:apps/src/customConfirmDialog.dart';
 
@@ -22,7 +21,7 @@ class _PantauLingkunganPagesState extends State<PantauLingkunganPages> {
   void showDataGh() async {
     final result = await ghApi.getDataGhNama();
     if (result != null) {
-      print("result " + result.toString());
+      print("result $result");
       setState(() {
         // Pastikan ini di dalam setState untuk memperbarui UI
         _ghData = result['data_gh'];

@@ -1,3 +1,4 @@
+import 'package:apps/SendApi/tokenJWT.dart';
 import 'package:apps/SendApi/userApi.dart';
 import 'package:apps/main.dart';
 import 'dart:convert';
@@ -12,8 +13,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
-  static String token = "";
-  static String email = "";
   @override
   _LoginState createState() => _LoginState();
 }
@@ -93,18 +92,17 @@ class _LoginState extends State<Login> {
         String password = _passwordController.text;
 
         final result = await UserApi.login(email, password);
-        print("result : " + result.toString());
-
+        print("result : $result");
+        String? token = await TokenJwt.getToken();
         if (result != null) {
-          print("token login : " + Login.token);
           if (result['status'] != "error") {
+            await TokenJwt.saveEmail(result['data']['email']);
             setState(() {
-              Login.email = result['data']['email'];
-              print('email : ' + Login.email);
               isLoading = false; // Berhenti loading
             });
+
             Navigator.of(context).pushReplacement(
-              SmoothPageTransition(page: const MainPage()),
+              SmoothPageTransition(page: MainPage()),
             );
           } else {
             setState(() {
@@ -112,10 +110,6 @@ class _LoginState extends State<Login> {
               errorText = result['message'];
               isLoading = false; // Berhenti loading
             });
-
-            Login.token = "";
-            print(result);
-            print("Login gagal : ${result['message']}");
           }
         } else {
           setState(() {
@@ -123,8 +117,8 @@ class _LoginState extends State<Login> {
             errorText = "Kesalahan Pada Server";
             isLoading = false; // Berhenti loading
           });
-          print("email :" + email);
-          print("pw :" + password);
+          print("email :$email");
+          print("pw :$password");
           print(result);
           print('Login gagall: ${result?['message']}');
         }
@@ -197,7 +191,7 @@ class _LoginState extends State<Login> {
                 child: Visibility(
                   visible: showError,
                   child: Text(
-                    "${errorText}",
+                    errorText,
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.red, // Mengubah warna di sini
@@ -209,8 +203,8 @@ class _LoginState extends State<Login> {
               const SizedBox(height: 30), // Mengurangi jarak di sini jika perlu
               CustomFormField(
                 controller: _usernameController,
-                labelText: 'Username',
-                hintText: 'Masukan Username Pengguna',
+                labelText: 'Email',
+                hintText: 'Masukan Email Pengguna',
                 errorText: _usernameError.isNotEmpty ? _usernameError : null,
               ),
               const SizedBox(height: 10),

@@ -1,18 +1,21 @@
 import 'dart:convert';
 import 'package:apps/SendApi/Server.dart';
+import 'package:apps/SendApi/tokenJWT.dart';
 import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:http/http.dart' as http;
 
 class ghApi {
   static Future<Map<String, dynamic>?> getDataGh() async {
+    String? email = await TokenJwt.getEmail();
+    String? token = await TokenJwt.getToken();
     final response = await http.post(
       Server.urlLaravel("green-house"),
       headers: {
         "Content-Type": "application/json",
-        "Authorization": Login.token
+        "Authorization": token.toString()
       },
       body: json.encode({
-        "email": Login.email,
+        "email": email.toString(),
       }),
     );
 
@@ -30,14 +33,16 @@ class ghApi {
   }
 
   static Future<Map<String, dynamic>?> getDataGhNama() async {
+    String? email = await TokenJwt.getEmail();
+    String? token = await TokenJwt.getToken();
     final response = await http.post(
       Server.urlLaravel("green-house/nama"),
       headers: {
         "Content-Type": "application/json",
-        "Authorization": Login.token
+        "Authorization": token.toString()
       },
       body: json.encode({
-        "email": Login.email,
+        "email": email.toString(),
       }),
     );
 
@@ -54,18 +59,17 @@ class ghApi {
     }
   }
 
-  static Future<Map<String, dynamic>?> deleteDataGh(String id_gh) async {
+  static Future<Map<String, dynamic>?> deleteDataGh(String idGh) async {
+    String? token = await TokenJwt.getToken();
+    String? email = await TokenJwt.getEmail();
     final response = await http.delete(
       Server.urlLaravel("green-house/hapus"),
       headers: {
         "Content-Type": "application/json",
-        "Authorization": Login.token
+        "Authorization": token.toString()
       },
-      body: json.encode({"id_gh": id_gh, "email": Login.email}),
+      body: json.encode({"id_gh": idGh, "email": email.toString()}),
     );
-    print("kode : " + json.encode({"id_gh": id_gh, "email": Login.email}));
-    print("kode : " + response.statusCode.toString());
-    print("body : " + response.body);
     if (response.statusCode == 200) {
       final result = json.decode(response.body);
       return result;
@@ -73,7 +77,7 @@ class ghApi {
       final result = json.decode(response.body);
       return result;
     } else {
-      print("errorrrrr : " + response.body.toString());
+      print("errorrrrr : ${response.body}");
       return null;
     }
   }

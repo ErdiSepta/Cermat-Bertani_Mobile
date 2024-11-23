@@ -15,13 +15,13 @@ class Lupapassword3 extends StatefulWidget {
 }
 
 class _Lupapassword3State extends State<Lupapassword3> {
-  String _passwordBaruError = '';
-  String _konfirmasiPasswordError = '';
+  final String _passwordBaruError = '';
+  final String _konfirmasiPasswordError = '';
   bool _isPasswordVisible = false;
   bool _isKonfirmasiPasswordVisible = false;
   String _password = '';
   double _strength = 0;
-  bool _isPasswordMatch = true;
+  final bool _isPasswordMatch = true;
   bool _isLoading = false;
 
   final TextEditingController _passwordBaruController = TextEditingController();
@@ -87,22 +87,22 @@ class _Lupapassword3State extends State<Lupapassword3> {
 
   Future<Map<String, dynamic>?> _SendEmailUser() async {
     final result = await UserApi.ForgotPassword(widget.email, _password);
-    print("Result : " + result.toString());
+    print("Result : $result");
     if (result != null) {
       if (result['status'] == "success") {
-        print("Result : " + result.toString());
+        print("Result : $result");
         // Berhasil mendaftar
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LupaPassword4()),
         );
       } else if (result['status'] == "error") {
-        print("Resultt : " + result.toString());
+        print("Resultt : $result");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Gagal ubah password : ${result['message']}')),
         );
       } else {
-        print("Resulttt : " + result.toString());
+        print("Resulttt : $result");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content:
@@ -110,7 +110,7 @@ class _Lupapassword3State extends State<Lupapassword3> {
         );
       }
     } else {
-      print("gagal : " + result.toString());
+      print("gagal : $result");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text('Pendaftaran gagal: ada kesalahan pengiriman data')),
@@ -120,6 +120,7 @@ class _Lupapassword3State extends State<Lupapassword3> {
     setState(() {
       _isLoading = false; // Menyembunyikan loading setelah permintaan selesai
     });
+    return null;
   }
 
   @override

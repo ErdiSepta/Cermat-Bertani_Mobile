@@ -22,7 +22,7 @@ class _IsiPanenPagesState extends State<IsiPanenPages> {
   void showDataGh() async {
     final result = await ghApi.getDataGhNama();
     if (result != null) {
-      print("result " + result.toString());
+      print("result $result");
       setState(() {
         // Pastikan ini di dalam setState untuk memperbarui UI
         _ghData = result['data_gh'];
@@ -298,6 +298,7 @@ class _IsiPanenPagesState extends State<IsiPanenPages> {
                 controller: rasaRataController,
                 labelText: 'Rasa Rata - Rata',
                 hintText: 'Masukan Rasa Rata - Rata',
+                keyboardType: TextInputType.number,
                 errorText: _rasaRataError.isNotEmpty ? _rasaRataError : null,
               ),
               const SizedBox(height: 20),

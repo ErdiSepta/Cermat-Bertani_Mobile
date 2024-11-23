@@ -3,7 +3,6 @@ import 'package:apps/SendApi/ghApi.dart';
 import 'package:apps/SendApi/pembudidayaanApi.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customFormfield.dart';
-import 'package:apps/src/customDropdown.dart';
 import 'package:apps/src/topnav.dart';
 import 'package:apps/src/customConfirmDialog.dart';
 
@@ -23,7 +22,7 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
   void showDataGh() async {
     final result = await ghApi.getDataGhNama();
     if (result != null) {
-      print("result " + result.toString());
+      print("result $result");
       setState(() {
         // Pastikan ini di dalam setState untuk memperbarui UI
         _ghData = result['data_gh'];
@@ -108,14 +107,17 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
 
   // Clear error functions
   void _clearPerendamanAwalError() {
-    if (_perendamanAwalError.isNotEmpty)
+    if (_perendamanAwalError.isNotEmpty) {
       setState(() => _perendamanAwalError = '');
+    }
   }
 
   void _clearPerendamanAkhirError() {
-    if (_perendamanAkhirError.isNotEmpty)
+    if (_perendamanAkhirError.isNotEmpty) {
       setState(() => _perendamanAkhirError = '');
+    }
   }
+//
 
   void _clearSemaiAwalError() {
     if (_semaiAwalError.isNotEmpty) setState(() => _semaiAwalError = '');
@@ -125,24 +127,31 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
     if (_semaiAkhirError.isNotEmpty) setState(() => _semaiAkhirError = '');
   }
 
+//
+
   void _clearVegetatifAwalError() {
-    if (_vegetatifAwalError.isNotEmpty)
+    if (_vegetatifAwalError.isNotEmpty) {
       setState(() => _vegetatifAwalError = '');
+    }
   }
 
   void _clearVegetatifAkhirError() {
-    if (_vegetatifAkhirError.isNotEmpty)
+    if (_vegetatifAkhirError.isNotEmpty) {
       setState(() => _vegetatifAkhirError = '');
+    }
   }
+//
 
   void _clearPenyiramanAwalError() {
-    if (_penyiramanAwalError.isNotEmpty)
+    if (_penyiramanAwalError.isNotEmpty) {
       setState(() => _penyiramanAwalError = '');
+    }
   }
 
   void _clearPenyiramanAkhirError() {
-    if (_penyiramanAkhirError.isNotEmpty)
+    if (_penyiramanAkhirError.isNotEmpty) {
       setState(() => _penyiramanAkhirError = '');
+    }
   }
 
 // Fungsi untuk memeriksa apakah format tanggal valid
@@ -159,57 +168,65 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
     setState(() {
       _greenhouseError = ''; // Reset error jika ada
 
-      // Validasi untuk perendaman awal dan akhir
-      _perendamanAwalError = perendamanAwalController.text.isEmpty
-          ? 'Tanggal awal perendaman harus diisi'
-          : '';
-      _perendamanAkhirError = perendamanAkhirController.text.isEmpty
-          ? 'Tanggal akhir perendaman harus diisi'
-          : _isInvalidDateFormat(perendamanAkhirController.text)
-              ? 'Format tanggal akhir perendaman tidak valid'
-              : DateTime.parse(perendamanAkhirController.text)
-                      .isBefore(DateTime.parse(perendamanAwalController.text))
-                  ? 'Tanggal akhir perendaman tidak boleh sebelum tanggal awal'
-                  : '';
+      // Flag untuk cek apakah semua pasangan tanggal kosong
+      bool allFieldsEmpty = perendamanAwalController.text.isEmpty &&
+          perendamanAkhirController.text.isEmpty &&
+          semaiAwalController.text.isEmpty &&
+          semaiAkhirController.text.isEmpty &&
+          vegetatifAwalController.text.isEmpty &&
+          vegetatifAkhirController.text.isEmpty &&
+          penyiramanAwalController.text.isEmpty &&
+          penyiramanAkhirController.text.isEmpty;
 
-      // Validasi untuk semai awal dan akhir
-      _semaiAwalError = semaiAwalController.text.isEmpty
-          ? 'Tanggal awal semai harus diisi'
-          : '';
-      _semaiAkhirError = semaiAkhirController.text.isEmpty
-          ? 'Tanggal akhir semai harus diisi'
-          : _isInvalidDateFormat(semaiAkhirController.text)
-              ? 'Format tanggal akhir semai tidak valid'
-              : DateTime.parse(semaiAkhirController.text)
-                      .isBefore(DateTime.parse(semaiAwalController.text))
-                  ? 'Tanggal akhir semai tidak boleh sebelum tanggal awal'
-                  : '';
+      // Fungsi untuk validasi pasangan tanggal
+      String validatePair(
+          String awal, String akhir, String labelAwal, String labelAkhir) {
+        if (awal.isEmpty && akhir.isEmpty) {
+          return allFieldsEmpty ? '$labelAwal dan $labelAkhir harus diisi' : '';
+        } else if (awal.isEmpty) {
+          return '$labelAwal harus diisi';
+        } else if (akhir.isEmpty) {
+          return '$labelAkhir harus diisi';
+        } else if (_isInvalidDateFormat(akhir)) {
+          return 'Format $labelAkhir tidak valid';
+        } else if (DateTime.parse(akhir).isBefore(DateTime.parse(awal))) {
+          return '$labelAkhir tidak boleh sebelum $labelAwal';
+        }
+        return '';
+      }
 
-      // Validasi untuk vegetatif awal dan akhir
-      _vegetatifAwalError = vegetatifAwalController.text.isEmpty
-          ? 'Tanggal awal vegetatif harus diisi'
-          : '';
-      _vegetatifAkhirError = vegetatifAkhirController.text.isEmpty
-          ? 'Tanggal akhir vegetatif harus diisi'
-          : _isInvalidDateFormat(vegetatifAkhirController.text)
-              ? 'Format tanggal akhir vegetatif tidak valid'
-              : DateTime.parse(vegetatifAkhirController.text)
-                      .isBefore(DateTime.parse(vegetatifAwalController.text))
-                  ? 'Tanggal akhir vegetatif tidak boleh sebelum tanggal awal'
-                  : '';
+      // Validasi pasangan tanggal
+      _perendamanAwalError = validatePair(
+        perendamanAwalController.text,
+        perendamanAkhirController.text,
+        'Tanggal awal perendaman',
+        'Tanggal akhir perendaman',
+      );
+      _perendamanAkhirError = _perendamanAwalError;
 
-      // Validasi untuk penyiraman awal dan akhir
-      _penyiramanAwalError = penyiramanAwalController.text.isEmpty
-          ? 'Tanggal awal penyiraman harus diisi'
-          : '';
-      _penyiramanAkhirError = penyiramanAkhirController.text.isEmpty
-          ? 'Tanggal akhir penyiraman harus diisi'
-          : _isInvalidDateFormat(penyiramanAkhirController.text)
-              ? 'Format tanggal akhir penyiraman tidak valid'
-              : DateTime.parse(penyiramanAkhirController.text)
-                      .isBefore(DateTime.parse(penyiramanAwalController.text))
-                  ? 'Tanggal akhir penyiraman tidak boleh sebelum tanggal awal'
-                  : '';
+      _semaiAwalError = validatePair(
+        semaiAwalController.text,
+        semaiAkhirController.text,
+        'Tanggal awal semai',
+        'Tanggal akhir semai',
+      );
+      _semaiAkhirError = _semaiAwalError;
+
+      _vegetatifAwalError = validatePair(
+        vegetatifAwalController.text,
+        vegetatifAkhirController.text,
+        'Tanggal awal vegetatif',
+        'Tanggal akhir vegetatif',
+      );
+      _vegetatifAkhirError = _vegetatifAwalError;
+
+      _penyiramanAwalError = validatePair(
+        penyiramanAwalController.text,
+        penyiramanAkhirController.text,
+        'Tanggal awal penyiraman',
+        'Tanggal akhir penyiraman',
+      );
+      _penyiramanAkhirError = _penyiramanAwalError;
     });
 
     if (_greenhouseError.isEmpty &&
@@ -230,28 +247,37 @@ class _PembudidayaanPagesState extends State<PembudidayaanPages> {
       );
 
       if (confirm) {
-        final result = await PembudidayaanApi.tambahPembudidayaan(
-            perendamanAwalController.text,
-            perendamanAkhirController.text,
-            semaiAwalController.text,
-            semaiAkhirController.text,
-            vegetatifAwalController.text,
-            vegetatifAkhirController.text,
-            penyiramanAwalController.text,
-            penyiramanAkhirController.text,
-            _idGH.toString());
+        try {
+          {
+            final result = await PembudidayaanApi.tambahPembudidayaan(
+                perendamanAwalController.text,
+                perendamanAkhirController.text,
+                semaiAwalController.text,
+                semaiAkhirController.text,
+                vegetatifAwalController.text,
+                vegetatifAkhirController.text,
+                penyiramanAwalController.text,
+                penyiramanAkhirController.text,
+                _idGH.toString());
 
-        if (result == null) {
-          print(result);
-          print('Data kosong!!!');
-        } else if (result['status'] == "success") {
-          print('berhasil simpan');
-          Navigator.pop(context); // Kembali ke halaman sebelumnya
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Pengiriman data gagal: ${result['message']}')),
-          );
+            if (result == null) {
+              print(result);
+              print('Data kosong!!!');
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Pengiriman data gagal: ')));
+            } else if (result['status'] == "success") {
+              print('berhasil simpan');
+              Navigator.pop(context); // Kembali ke halaman sebelumnya
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content:
+                        Text('Pengiriman data gagal: ${result['message']}')),
+              );
+            }
+          }
+        } catch (e) {
+          SnackBar(content: Text('Pengiriman data gagal: ${e.toString()}'));
         }
       }
     }

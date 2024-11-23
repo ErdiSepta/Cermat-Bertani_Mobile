@@ -58,8 +58,10 @@ class Pendataan1pages extends StatelessWidget {
                   if (result?['data_gh'] != null &&
                       result?['data_gh'] != '[]') {
                     print(result?['data_gh']);
-                    Navigator.push(context,
-                        SmoothPageTransition(page: RekapPembudidayaanPages()));
+                    Navigator.push(
+                        context,
+                        SmoothPageTransition(
+                            page: RekapHamadanPenyakitPages()));
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

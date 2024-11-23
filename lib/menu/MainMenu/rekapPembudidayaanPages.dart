@@ -1,7 +1,10 @@
+import 'package:apps/SendApi/ghApi.dart';
+import 'package:apps/SendApi/pembudidayaanApi.dart';
 import 'package:flutter/material.dart';
 import 'package:apps/src/customDropdown.dart';
 import 'package:apps/src/topnav.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:flutter/cupertino.dart';
 
 class RekapPembudidayaanPages extends StatefulWidget {
   const RekapPembudidayaanPages({super.key});
@@ -12,98 +15,157 @@ class RekapPembudidayaanPages extends StatefulWidget {
 }
 
 class _RekapPembudidayaanPagesState extends State<RekapPembudidayaanPages> {
-  String? selectedGreenhouse;
+  // Variabel untuk Greenhouse dan Jenis Data
   String? selectedJenisData;
-  String _greenhouseError = '';
+  final String _greenhouseError = '';
   String _jenisDataError = '';
-  String _tanggalAwalError = '';
-  String _tanggalAkhirError = '';
+  final String _tanggalAwalError = '';
+  final String _tanggalAkhirError = '';
 
-  DateTime? startDate;
-  DateTime? endDate;
+  // Kontroler untuk tanggal
+  final TextEditingController tanggalAwalController = TextEditingController();
+  final TextEditingController tanggalAkhirController = TextEditingController();
+
+  // Variabel untuk menyimpan data Greenhouse
+  String? _selectedGH;
+  String? _idGH = "";
+  int? _realIdGH = 0;
+  List<String> _ghList = [];
+  Map<String, dynamic> _ghData = {};
+  Map<String, dynamic> jadwalData = {};
+
+  // Tanggal untuk TableCalendar
+  DateTime? _rangeStart;
+  DateTime? _rangeEnd;
   final DateTime _focusedDay = DateTime.now();
 
-  final List<String> greenhouseList = ['GH-01', 'GH-02', 'GH-03'];
   final List<String> jenisDataList = [
     'Perendaman',
     'Fase Semai',
     'Fase Vegetatif - Generatif',
-    'Penyerbukan',
     'Penyiraman',
   ];
-
-  DateTime? _rangeStart;
-  DateTime? _rangeEnd;
-
-  // Tambahkan map untuk menyimpan data range tanggal
-  final Map<String, Map<String, DateTime>> jadwalData = {
-    'Perendaman': {
-      'start': DateTime(2024, 12, 18),
-      'end': DateTime(2024, 12, 28),
-    },
-    'Fase Semai': {
-      'start': DateTime(2024, 12, 10),
-      'end': DateTime(2024, 12, 20),
-    },
-    // Tambahkan data lainnya sesuai kebutuhan
-  };
 
   @override
   void initState() {
     super.initState();
+    _fetchGreenhouseData();
     selectedJenisData = jenisDataList[0];
-    _updateDateRange();
   }
 
-  // Fungsi untuk update range tanggal berdasarkan jenis data yang dipilih
-  void _updateDateRange() {
-    if (selectedJenisData != null && jadwalData.containsKey(selectedJenisData)) {
+  // Fetch Data Greenhouse
+  Future<void> _fetchGreenhouseData() async {
+    final result = await ghApi.getDataGhNama();
+    if (result != null && result['data_gh'] != null) {
       setState(() {
-        _rangeStart = jadwalData[selectedJenisData]!['start'];
-        _rangeEnd = jadwalData[selectedJenisData]!['end'];
+        _ghData = result['data_gh'];
+        _ghList = result['data_gh'].keys.toList();
+        _selectedGH = _ghList.isNotEmpty ? _ghList[0] : null;
+
+        if (_selectedGH != null) {
+          _loadGHData(_selectedGH!);
+        }
       });
+    } else {
+      _showSnackbar('Anda belum memiliki Green House');
     }
   }
 
-  // Fungsi untuk mengecek apakah tanggal yang dipilih adalah tanggal awal atau akhir
-  bool isMarkedDate(DateTime date) {
+  // Memuat data Greenhouse
+  void _loadGHData(String gh) {
+    final data = _ghData[gh];
+    _idGH = data['uuid'];
+    _realIdGH = data['id_gh'];
+    _fetchJadwalData();
+  }
+
+  // Fetch Jadwal Data dari API
+  Future<void> _fetchJadwalData() async {
+    if (_idGH == null || selectedJenisData == null) return;
+
+    final result = await PembudidayaanApi.showRekap(
+      selectedJenisData.toString(),
+      _idGH.toString(),
+    );
+    setState(() {
+      print("Resultnya : $result");
+      if (result != null) {
+        jadwalData = result;
+        if (result["status"] == "success") {
+          jadwalData = result;
+        } else if (result["status"] == "error") {
+          jadwalData = result;
+        } else {
+          jadwalData = {};
+        }
+      } else {
+        jadwalData = {};
+      }
+      _updateDateRange();
+    });
+  }
+
+  void _updateDateRange() {
+    if (selectedJenisData != null && jadwalData['status'] != "error") {
+      final data = jadwalData['data'];
+      // Validasi apakah tgl_awal dan tgl_akhir ada dan dalam format yang benar
+      if (data.containsKey('tgl_awal') && data.containsKey('tgl_akhir')) {
+        try {
+          setState(() {
+            // Parsing string ke DateTime jika diperlukan
+            _rangeStart = DateTime.tryParse(data['tgl_awal']);
+            _rangeEnd = DateTime.tryParse(data['tgl_akhir']);
+          });
+        } catch (e) {
+          print('Error parsing tanggal: $e');
+        }
+      } else {
+        print('Data tidak memiliki kunci tgl_awal atau tgl_akhir');
+      }
+    } else {
+      _rangeStart = null;
+      _rangeEnd = null;
+      print('Jadwal Data atau data tidak tersedia');
+    }
+  }
+
+  // Validasi Input
+  void _validateInputs() async {
+    _showAlertDialog(context);
+  }
+
+  // Menampilkan Snackbar
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  void _showSnackbarTrue(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(
+            color: Colors.black,
+          ),
+        ),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  // Fungsi Utility untuk Cek Tanggal
+  bool _isMarkedDate(DateTime date) {
     return (_rangeStart != null && isSameDay(date, _rangeStart)) ||
         (_rangeEnd != null && isSameDay(date, _rangeEnd));
   }
 
-  // Fungsi untuk mengecek apakah tanggal berada dalam range
-  bool isWithinRange(DateTime date) {
+  bool _isWithinRange(DateTime date) {
     if (_rangeStart == null || _rangeEnd == null) return false;
     return (date.isAfter(_rangeStart!) && date.isBefore(_rangeEnd!)) ||
         isSameDay(date, _rangeStart!) ||
         isSameDay(date, _rangeEnd!);
-  }
-
-  Future<void> fetchJadwalFromDatabase() async {
-    // Implementasi pengambilan data dari database
-    // Contoh dengan API:
-    // final response = await http.get(Uri.parse('your_api_endpoint'));
-    // final data = json.decode(response.body);
-    // setState(() {
-    //   jadwalData = data;
-    //   _updateDateRange();
-    // });
-  }
-
-  void _validateInputs() {
-    setState(() {
-      _greenhouseError = selectedGreenhouse == null ? 'Greenhouse harus dipilih' : '';
-      _jenisDataError = selectedJenisData == null ? 'Jenis data harus dipilih' : '';
-      _tanggalAwalError = _rangeStart == null ? 'Tanggal awal harus dipilih' : '';
-      _tanggalAkhirError = _rangeEnd == null ? 'Tanggal akhir harus dipilih' : '';
-    });
-
-    if (_greenhouseError.isEmpty && 
-        _jenisDataError.isEmpty && 
-        _tanggalAwalError.isEmpty && 
-        _tanggalAkhirError.isEmpty) {
-      print('Semua data valid, siap untuk disimpan');
-    }
   }
 
   @override
@@ -129,19 +191,40 @@ class _RekapPembudidayaanPagesState extends State<RekapPembudidayaanPages> {
               ),
               const SizedBox(height: 30),
 
-              // Greenhouse Dropdown
-              CustomDropdown(
-                labelText: 'Greenhouse',
-                hintText: 'Pilih Greenhouse',
-                value: selectedGreenhouse ?? greenhouseList[0],
-                items: greenhouseList,
-                errorText: _greenhouseError.isNotEmpty ? _greenhouseError : null,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedGreenhouse = newValue;
-                    _greenhouseError = '';
-                  });
-                },
+              const Text(
+                'Green house',
+                style: TextStyle(
+                  fontSize: 17,
+                  color: Colors.black,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  underline: Container(),
+                  hint: const Text('Pilih Greenhouse'),
+                  value: _selectedGH,
+                  items: _ghList.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedGH = newValue;
+                      _loadGHData(newValue!);
+                    });
+                  },
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -156,6 +239,7 @@ class _RekapPembudidayaanPagesState extends State<RekapPembudidayaanPages> {
                   setState(() {
                     selectedJenisData = newValue;
                     _jenisDataError = '';
+                    _fetchJadwalData();
                     _updateDateRange();
                   });
                 },
@@ -169,22 +253,23 @@ class _RekapPembudidayaanPagesState extends State<RekapPembudidayaanPages> {
                   Container(
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: (_tanggalAwalError.isNotEmpty || _tanggalAkhirError.isNotEmpty) 
-                          ? Colors.red 
-                          : Colors.grey
-                      ),
+                          color: (_tanggalAwalError.isNotEmpty ||
+                                  _tanggalAkhirError.isNotEmpty)
+                              ? Colors.red
+                              : Colors.grey),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: TableCalendar(
                       firstDay: DateTime.utc(2024, 1, 1),
-                      lastDay: DateTime.utc(2024, 12, 31),
+                      lastDay: DateTime.utc(2025, 12, 31),
                       focusedDay: _focusedDay,
                       calendarFormat: CalendarFormat.month,
-                      selectedDayPredicate: (day) => isMarkedDate(day),
+                      selectedDayPredicate: (day) => _isMarkedDate(day),
                       rangeStartDay: _rangeStart,
                       rangeEndDay: _rangeEnd,
                       rangeSelectionMode: RangeSelectionMode.enforced,
-                      onDaySelected: null, // Hapus onDaySelected karena tidak perlu manual selection
+                      onDaySelected:
+                          null, // Hapus onDaySelected karena tidak perlu manual selection
                       calendarStyle: CalendarStyle(
                         selectedDecoration: const BoxDecoration(
                           color: Colors.blue,
@@ -199,7 +284,8 @@ class _RekapPembudidayaanPagesState extends State<RekapPembudidayaanPages> {
                           color: Colors.blue,
                           shape: BoxShape.circle,
                         ),
-                        withinRangeTextStyle: const TextStyle(color: Colors.black),
+                        withinRangeTextStyle:
+                            const TextStyle(color: Colors.black),
                         rangeHighlightColor: Colors.blue.withOpacity(0.2),
                       ),
                     ),
@@ -242,20 +328,22 @@ class _RekapPembudidayaanPagesState extends State<RekapPembudidayaanPages> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _validateInputs,
+                  key: Key('hapusJadwalButton'),
+                  onPressed: () {
+                    _showAlertDialog(context);
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: Colors.red,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
                   child: const Text(
-                    'Print',
+                    'Hapus Jadwal',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white,
-                      fontFamily: 'NotoSanSemiBold',
                     ),
                   ),
                 ),
@@ -263,6 +351,58 @@ class _RekapPembudidayaanPagesState extends State<RekapPembudidayaanPages> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  String removeFirstSixCharacters(String input) {
+    // Periksa apakah panjang string cukup
+    if (input.length <= 5) {
+      return ''; // Jika kurang dari atau sama dengan 6 karakter, kembalikan string kosong
+    }
+    return input.substring(5); // Hapus 6 karakter pertama
+  }
+
+  void _showAlertDialog(BuildContext context) {
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoAlertDialog(
+        title: const Text('Hapus Jadwal'),
+        content: Text(
+          'Anda yakin ingin menghapus semua jadwal pada Greenhouse ${removeFirstSixCharacters(_selectedGH.toString())}?',
+        ),
+        actions: <CupertinoDialogAction>[
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () {
+              Navigator.pop(context); // Tutup dialog
+            },
+            child: const Text('No'),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () async {
+              try {
+                final result =
+                    await PembudidayaanApi.deleteRekap(_idGH.toString());
+                if (result != null && result['status'] == "success") {
+                  Navigator.pop(context); // Tutup dialog jika sukses
+                  _showSnackbarTrue(
+                    "Jadwal berhasil dihapus!",
+                  );
+                  _fetchGreenhouseData();
+                } else {
+                  Navigator.pop(context); // Tutup dialog jika gagal
+                  _showSnackbar(result?['message'] ?? "Kesalahan pada server");
+                }
+              } catch (e) {
+                Navigator.pop(context); // Tutup dialog jika error
+                _showSnackbar("Terjadi kesalahan: $e");
+              }
+            },
+            child: const Text('Yes'),
+          ),
+        ],
       ),
     );
   }

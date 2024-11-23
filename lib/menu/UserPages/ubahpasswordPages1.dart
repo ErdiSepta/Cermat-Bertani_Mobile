@@ -124,7 +124,7 @@ class _UbahPasswordPage1State extends State<UbahPasswordPage1> {
                 _controllers['Password Lama']!.text.toString(),
                 _controllers['Password Baru']!.text.toString(),
                 _controllers['Konfirmasi Password Baru']!.text.toString());
-            print("result : " + result.toString());
+            print("result : $result");
 
             if (result != null) {
               if (result['status'] != "error") {

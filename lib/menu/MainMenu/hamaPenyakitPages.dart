@@ -22,7 +22,7 @@ class _HamaPenyakitPagesState extends State<HamaPenyakitPages> {
   void showDataGh() async {
     final result = await ghApi.getDataGhNama();
     if (result != null) {
-      print("result " + result.toString());
+      print("result $result");
       setState(() {
         // Pastikan ini di dalam setState untuk memperbarui UI
         _ghData = result['data_gh'];
@@ -158,29 +158,29 @@ class _HamaPenyakitPagesState extends State<HamaPenyakitPages> {
         cancelText: 'Tidak',
       );
 
-      String? _getwarnaDaun = warnaDaunLainController.text.isEmpty
-          ? selectedSeranganHama
+      String? getwarnaDaun = warnaDaunLainController.text.isEmpty
+          ? selectedWarnaDaun
           : warnaDaunLainController.text;
-      String? _getwarnaBatang = warnaBatangLainController.text.isEmpty
-          ? selectedSeranganHama
+      String? getwarnaBatang = warnaBatangLainController.text.isEmpty
+          ? selectedWarnaBatang
           : warnaBatangLainController.text;
-      String? _getSerangan = seranganHamaLainController.text.isEmpty
+      String? getSerangan = seranganHamaLainController.text.isEmpty
           ? selectedSeranganHama
           : seranganHamaLainController.text;
-      String? _getPenanganan = caraPenangananController.text.isEmpty
+      String? getPenanganan = caraPenangananController.text.isEmpty
           ? "Belum Ada"
           : caraPenangananController.text;
-      String? _getSPestisida =
+      String? getSPestisida =
           pestisidaController.text.isEmpty ? "0" : pestisidaController.text;
       if (confirm) {
         final result = await HamaAndPenyakitApi.tambahHamaAndPenyakit(
-            _getwarnaDaun.toString(),
-            _getwarnaBatang.toString(),
-            _getSerangan.toString(),
-            _getPenanganan.toString(),
-            _getSPestisida.toString(),
+            getwarnaDaun.toString(),
+            getwarnaBatang.toString(),
+            getSerangan.toString(),
+            getPenanganan.toString(),
+            getSPestisida.toString(),
             _idGH.toString());
-
+        print("Isi data yang di kirim : $getwarnaDaun $getwarnaBatang $getSerangan $getPenanganan $getSPestisida $_idGH");
         if (result == null) {
           print('Data kosong!!!');
         } else if (result['status'] == "success") {
@@ -301,7 +301,6 @@ class _HamaPenyakitPagesState extends State<HamaPenyakitPages> {
               ),
 
               const SizedBox(height: 20),
-
               // Serangan Hama dropdown dan textfield
               CustomDropdown(
                 labelText: 'Serangan Hama',
