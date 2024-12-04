@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:apps/SendApi/Server.dart';
 import 'package:apps/SendApi/ghApi.dart';
 import 'package:apps/SendApi/tokenJWT.dart';
@@ -9,7 +10,18 @@ import 'package:apps/menu/UserPages/tentangapkPages.dart';
 import 'package:apps/menu/UserPages/ubahpasswordPages1.dart';
 import 'package:apps/src/pageTransition.dart';
 import 'package:flutter/material.dart';
-import 'package:apps/menu/UserPages/loginPages.dart'; // Sesuaikan dengan path file login Anda
+import 'package:apps/menu/UserPages/loginPages.dart';
+import 'package:google_sign_in/google_sign_in.dart'; // Sesuaikan dengan path file login Anda
+
+List<String> scopes = <String>[
+  'email',
+  'https://www.googleapis.com/auth/contacts.readonly',
+];
+GoogleSignIn _googleSignIn = GoogleSignIn(
+  // Optional clientId
+  // clientId: 'your-client_id.apps.googleusercontent.com',
+  scopes: scopes,
+);
 
 class Akunpage extends StatefulWidget {
   const Akunpage({super.key});
@@ -47,10 +59,10 @@ class _AkunpageState extends State<Akunpage> {
       } else if (result['status'] == "error") {
         print("Resultt : $result");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Pengambilan data gagal email: ${email1}}')),
+          SnackBar(content: Text('Pengambilan data gagal email: $email1}')),
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Pengambilan data gagal token: ${token}')),
+          SnackBar(content: Text('Pengambilan data gagal token: $token')),
         );
       } else {
         print("Resulttt : $result");
@@ -159,14 +171,7 @@ class _AkunpageState extends State<Akunpage> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () {
-                      TokenJwt.clearToken();
-                      TokenJwt.clearEmail();
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        SmoothPageTransition(page: const Login()),
-                        (route) =>
-                            false, // Ini akan menghapus semua halaman sebelumnya
-                      );
+                      _showAlertDialog(context);
                     },
                     child: const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16),
@@ -193,6 +198,41 @@ class _AkunpageState extends State<Akunpage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showAlertDialog(BuildContext context) {
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoAlertDialog(
+        title: const Text('Logout'),
+        content: Text(
+          'Anda yakin ingin logout?',
+        ),
+        actions: <CupertinoDialogAction>[
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () {
+              Navigator.pop(context); // Tutup dialog
+            },
+            child: const Text('No'),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () async {
+              TokenJwt.clearToken();
+              TokenJwt.clearEmail();
+              await _googleSignIn.signOut();
+              Navigator.pushAndRemoveUntil(
+                context,
+                SmoothPageTransition(page: const Login()),
+                (route) => false, // Ini akan menghapus semua halaman sebelumnya
+              );
+            },
+            child: const Text('Yes'),
+          ),
+        ],
       ),
     );
   }

@@ -1,13 +1,13 @@
 <variant
     name="release"
     package="com.example.apps"
-    minSdkVersion="21"
+    minSdkVersion="23"
     targetSdkVersion="34"
     shrinking="true"
     mergedManifest="D:\FlutterProject\Cermat-Bertani_Mobile\build\app\intermediates\merged_manifest\release\AndroidManifest.xml"
     proguardFiles="D:\FlutterProject\Cermat-Bertani_Mobile\build\app\intermediates\default_proguard_files\global\proguard-android.txt-8.1.0;D:\fluttersdk\flutter\packages\flutter_tools\gradle\flutter_proguard_rules.pro;proguard-rules.pro"
     partialResultsDir="D:\FlutterProject\Cermat-Bertani_Mobile\build\app\intermediates\lint_vital_partial_results\release\out"
-    desugaredMethodsFiles="C:\Users\User\.gradle\caches\transforms-3\df0aa62a169563622185bf5db5a60797\transformed\D8BackportedDesugaredMethods.txt">
+    desugaredMethodsFiles="C:\Users\User\.gradle\caches\transforms-3\65c0c5e1a46dd2074f619deb01dcd57d\transformed\D8BackportedDesugaredMethods.txt">
   <buildFeatures
       namespacing="REQUIRED"/>
   <sourceProviders>
@@ -31,6 +31,6 @@
       applicationId="com.example.apps"
       generatedSourceFolders="D:\FlutterProject\Cermat-Bertani_Mobile\build\app\generated\ap_generated_sources\release\out"
       generatedResourceFolders="D:\FlutterProject\Cermat-Bertani_Mobile\build\app\generated\res\resValues\release"
-      desugaredMethodsFiles="C:\Users\User\.gradle\caches\transforms-3\df0aa62a169563622185bf5db5a60797\transformed\D8BackportedDesugaredMethods.txt">
+      desugaredMethodsFiles="C:\Users\User\.gradle\caches\transforms-3\65c0c5e1a46dd2074f619deb01dcd57d\transformed\D8BackportedDesugaredMethods.txt">
   </mainArtifact>
 </variant>

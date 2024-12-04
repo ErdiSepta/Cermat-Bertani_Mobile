@@ -1,4 +1,4 @@
-#Sat Nov 23 22:36:11 WIB 2024
+#Thu Nov 28 12:14:37 WIB 2024
 base.0=D\:\\FlutterProject\\Cermat-Bertani_Mobile\\build\\app\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
 path.0=classes.dex
 renamed.0=classes.dex

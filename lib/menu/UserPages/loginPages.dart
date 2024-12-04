@@ -1,15 +1,30 @@
+import 'dart:async';
+
 import 'package:apps/SendApi/tokenJWT.dart';
 import 'package:apps/SendApi/userApi.dart';
 import 'package:apps/main.dart';
 import 'dart:convert';
+
 import 'package:apps/menu/UserPages/lupapassword1Pages.dart';
 import 'package:apps/menu/UserPages/register1Pages.dart';
 import 'package:apps/src/customColor.dart';
 import 'package:apps/src/customFormfield.dart';
 import 'package:apps/src/pageTransition.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+List<String> scopes = <String>[
+  'email',
+  'https://www.googleapis.com/auth/contacts.readonly',
+];
+GoogleSignIn _googleSignIn = GoogleSignIn(
+  // Optional clientId
+  // clientId: 'your-client_id.apps.googleusercontent.com',
+  scopes: scopes,
+);
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -18,6 +33,65 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  //Backendgoogle
+  GoogleSignInAccount? _currentUser;
+  bool _isAuthorized = false;
+  String _contactText = '';
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Mendengarkan perubahan akun
+    _googleSignIn.onCurrentUserChanged
+        .listen((GoogleSignInAccount? account) async {
+      bool isAuthorized = account != null;
+
+      if (kIsWeb && account != null) {
+        isAuthorized = await _googleSignIn.canAccessScopes(scopes);
+      }
+
+      setState(() {
+        _currentUser = account;
+        _isAuthorized = isAuthorized;
+      });
+
+      // Jika sudah login dan mendapatkan email, tampilkan emailnya
+      if (isAuthorized) {
+        String userEmail = _currentUser!.email;
+        setState(() {
+          _contactText = 'Email: $userEmail';
+        });
+      }
+    });
+
+    _googleSignIn
+        .signInSilently(); // Cek apakah sudah ada akun yang login sebelumnya
+  }
+
+  // Sign-in handler untuk Google Sign-In
+  Future<void> _handleSignIn() async {
+    try {
+      String email = await TokenJwt.getEmail().toString();
+      if (_currentUser != null || email != null) {
+        await _googleSignIn.signOut();
+      }
+
+      // Panggil signIn() dan simpan hasilnya ke variabel lokal
+      GoogleSignInAccount? newUser = await _googleSignIn.signIn();
+      if (newUser != null) {
+        _currentUser = newUser;
+        print("email = ${newUser.email}");
+        _cekloginGoogle(newUser.email);
+        // Lakukan sesuatu dengan email pengguna
+      } else {
+        print("Tidak ada akun yang dipilih.");
+      }
+    } catch (error) {
+      print("Terjadi kesalahan: $error");
+    }
+  }
+
   bool _isPasswordVisible = false; // Variabel untuk mengatur tampilan password
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -130,6 +204,48 @@ class _LoginState extends State<Login> {
       }
     } else {
       print("KOSONGG");
+    }
+  }
+
+  Future<void> _cekloginGoogle(String emailUser) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final result = await UserApi.loginGoogle(emailUser);
+      print("result : $result");
+      String? token = await TokenJwt.getToken();
+      if (result != null) {
+        if (result['status'] != "error") {
+          await TokenJwt.saveEmail(result['data']['email']);
+          setState(() {
+            isLoading = false;
+            print("isi dari tokenya : ${result.toString()}");
+          });
+
+          Navigator.of(context).pushReplacement(
+            SmoothPageTransition(page: MainPage()),
+          );
+        } else {
+          setState(() {
+            showError = true;
+            errorText = result['message'];
+          });
+        }
+      } else {
+        setState(() {
+          showError = true;
+          errorText = "Kesalahan Pada Server";
+        });
+        print(result);
+        print('Login gagall: ${result?['message']}');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print("Error: $e");
     }
   }
 
@@ -281,9 +397,7 @@ class _LoginState extends State<Login> {
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.8,
                   child: OutlinedButton.icon(
-                    onPressed: () {
-                      // Tambahkan logika untuk Google Login di sini
-                    },
+                    onPressed: _handleSignIn,
                     icon: Image.asset('assets/images/Google.png',
                         width: 24), // Ganti dengan path ikon Google
                     label: const Text(

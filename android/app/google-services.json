@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "111113642710",
+    "project_id": "certani-4f3da",
+    "storage_bucket": "certani-4f3da.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:111113642710:android:28c31e4cefd6ce2a471f77",
+        "android_client_info": {
+          "package_name": "com.example.apps"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATl2NjXEmGsxRaplnpn-Oyku8SwmovE1Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

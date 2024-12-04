@@ -127,14 +127,8 @@ class _RekapPembudidayaanPagesState extends State<RekapPembudidayaanPages> {
       _rangeEnd = null;
       print('Jadwal Data atau data tidak tersedia');
     }
-  }
+  } // Menampilkan Snackbar
 
-  // Validasi Input
-  void _validateInputs() async {
-    _showAlertDialog(context);
-  }
-
-  // Menampilkan Snackbar
   void _showSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),

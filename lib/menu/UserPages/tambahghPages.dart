@@ -8,7 +8,6 @@ import 'package:apps/src/customConfirmDialog.dart';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 

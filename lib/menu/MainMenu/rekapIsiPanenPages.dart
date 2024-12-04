@@ -57,8 +57,8 @@ class _RekapIsiPanenPagesState extends State<RekapIsiPanenPages> {
               data['berat_buah'].toString(),
               data['ukuran_buah'].toString(),
               data['rasa_buah'].toString(),
-              "${formatRupiah(data['biaya_operasional'].toString())}",
-              "${formatRupiah(data['pendapatan_penjualan'].toString())}",
+              (formatRupiah(data['biaya_operasional'].toString())),
+              (formatRupiah(data['pendapatan_penjualan'].toString())),
             ];
           }).toList();
 

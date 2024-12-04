@@ -94,10 +94,10 @@ class _ProfilAkunPageState extends State<ProfilAkunPage> {
           result['message'] == "token error must login") {
         print("Resultt : $result");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Pengambilan data gagal email: ${email}}')),
+          SnackBar(content: Text('Pengambilan data gagal email: $email}')),
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Pengambilan data gagal token: ${token}')),
+          SnackBar(content: Text('Pengambilan data gagal token: $token')),
         );
         Navigator.pushAndRemoveUntil(
           context,

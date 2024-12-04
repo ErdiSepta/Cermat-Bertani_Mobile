@@ -1,8 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenJwt {
-  static String _tokenKey = 'token_key';
-  static String _emailKey = 'email_key';
+  static final String _tokenKey = 'token_key';
+  static final String _emailKey = 'email_key';
 
   // Simpan token
   static Future<void> saveToken(String token) async {

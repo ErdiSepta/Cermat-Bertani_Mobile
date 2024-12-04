@@ -23,6 +23,8 @@ dependencies:
   flutter_launcher_icons: ^0.14.1
   shared_preferences: ^2.3.2
   email_otp: ^3.0.2
+  firebase_core: ^2.16.0
+  firebase_auth: ^4.8.2
   google_sign_in: ^6.2.2
   pdf: ^3.6.0
   printing: ^5.5.0

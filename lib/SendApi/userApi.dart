@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:apps/SendApi/Server.dart';
 import 'package:apps/SendApi/tokenJWT.dart';
-import 'package:apps/menu/UserPages/loginPages.dart';
 import 'package:http/http.dart' as http;
 
 class UserApi {
@@ -165,6 +164,32 @@ class UserApi {
     if (response.statusCode == 200) {
       final result = json.decode(response.body);
       final jwtToken = result['data']; // ini token e
+      await TokenJwt.saveToken(jwtToken);
+
+      final decodedPayload = _parseJwt(jwtToken);
+      return decodedPayload;
+    } else if (response.statusCode == 400) {
+      final result = json.decode(response.body);
+      return result;
+    } else {
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> loginGoogle(String email) async {
+    final response = await http.post(
+      Server.urlLaravel("users/login-google"),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: json.encode({
+        "email": email,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final result = json.decode(response.body);
+      final jwtToken = result['data'];
       await TokenJwt.saveToken(jwtToken);
 
       final decodedPayload = _parseJwt(jwtToken);

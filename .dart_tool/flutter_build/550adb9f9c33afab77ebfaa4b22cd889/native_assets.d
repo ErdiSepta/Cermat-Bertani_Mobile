@@ -1,0 +1,1 @@
+ D:\\FlutterProject\\Cermat-Bertani_Mobile\\.dart_tool\\flutter_build\\550adb9f9c33afab77ebfaa4b22cd889\\native_assets.yaml: 

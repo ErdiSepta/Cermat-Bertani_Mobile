@@ -17,9 +17,12 @@ class _SplashscreenState extends State<Splashscreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   int _currentIndex = 0;
+  Future<String?> showToken() async {
+    return await TokenJwt.getToken();
+  }
 
   @override
-  void initState() async {
+  void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
@@ -30,8 +33,7 @@ class _SplashscreenState extends State<Splashscreen>
         });
       });
     _controller.repeat();
-    String? token = await TokenJwt.getToken();
-    // Logika navigasi
+    Future<String?> token = showToken();
     Future.delayed(const Duration(seconds: 3), () {
       if (token.toString().isNotEmpty) {
         showProfil();

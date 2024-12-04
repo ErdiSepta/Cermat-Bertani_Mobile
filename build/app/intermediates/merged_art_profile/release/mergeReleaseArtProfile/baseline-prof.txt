@@ -706,6 +706,22 @@ HSPLandroidx/activity/result/contract/ActivityResultContracts$StartActivityForRe
 Landroidx/activity/result/contract/ActivityResultContracts$StartActivityForResult$Companion;
 HSPLandroidx/activity/result/contract/ActivityResultContracts$StartActivityForResult$Companion;-><init>()V
 HSPLandroidx/activity/result/contract/ActivityResultContracts$StartActivityForResult$Companion;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+# Baseline profiles for Lifecycle ViewModel
+
+HSPLandroidx/lifecycle/ViewModel;-><init>()V
+HSPLandroidx/lifecycle/ViewModelLazy;-><init>(Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;)V
+HSPLandroidx/lifecycle/ViewModelLazy;->getValue()Landroidx/lifecycle/ViewModel;
+HSPLandroidx/lifecycle/ViewModelLazy;->getValue()Ljava/lang/Object;
+HSPLandroidx/lifecycle/ViewModelProvider;-><init>(Landroidx/lifecycle/ViewModelStore;Landroidx/lifecycle/ViewModelProvider$Factory;)V
+HSPLandroidx/lifecycle/ViewModelProvider;->get(Ljava/lang/Class;)Landroidx/lifecycle/ViewModel;
+HSPLandroidx/lifecycle/ViewModelProvider;->get(Ljava/lang/String;Ljava/lang/Class;)Landroidx/lifecycle/ViewModel;
+HSPLandroidx/lifecycle/ViewModelStore;-><init>()V
+HSPLandroidx/lifecycle/ViewModelStore;->get(Ljava/lang/String;)Landroidx/lifecycle/ViewModel;
+HSPLandroidx/lifecycle/ViewModelStore;->put(Ljava/lang/String;Landroidx/lifecycle/ViewModel;)V
+PLandroidx/lifecycle/ViewModel;->clear()V
+PLandroidx/lifecycle/ViewModel;->onCleared()V
+PLandroidx/lifecycle/ViewModelStore;->clear()V
+
 # Baseline profiles for lifecycle-livedata-core
 
 HSPLandroidx/lifecycle/LiveData$1;-><init>(Landroidx/lifecycle/LiveData;)V
@@ -746,22 +762,6 @@ HSPLandroidx/lifecycle/MediatorLiveData;->removeSource(Landroidx/lifecycle/LiveD
 HSPLandroidx/lifecycle/MutableLiveData;-><init>()V
 HSPLandroidx/lifecycle/MutableLiveData;->setValue(Ljava/lang/Object;)V
 PLandroidx/lifecycle/LiveData$LifecycleBoundObserver;->detachObserver()V
-
-# Baseline profiles for Lifecycle ViewModel
-
-HSPLandroidx/lifecycle/ViewModel;-><init>()V
-HSPLandroidx/lifecycle/ViewModelLazy;-><init>(Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;)V
-HSPLandroidx/lifecycle/ViewModelLazy;->getValue()Landroidx/lifecycle/ViewModel;
-HSPLandroidx/lifecycle/ViewModelLazy;->getValue()Ljava/lang/Object;
-HSPLandroidx/lifecycle/ViewModelProvider;-><init>(Landroidx/lifecycle/ViewModelStore;Landroidx/lifecycle/ViewModelProvider$Factory;)V
-HSPLandroidx/lifecycle/ViewModelProvider;->get(Ljava/lang/Class;)Landroidx/lifecycle/ViewModel;
-HSPLandroidx/lifecycle/ViewModelProvider;->get(Ljava/lang/String;Ljava/lang/Class;)Landroidx/lifecycle/ViewModel;
-HSPLandroidx/lifecycle/ViewModelStore;-><init>()V
-HSPLandroidx/lifecycle/ViewModelStore;->get(Ljava/lang/String;)Landroidx/lifecycle/ViewModel;
-HSPLandroidx/lifecycle/ViewModelStore;->put(Ljava/lang/String;Landroidx/lifecycle/ViewModel;)V
-PLandroidx/lifecycle/ViewModel;->clear()V
-PLandroidx/lifecycle/ViewModel;->onCleared()V
-PLandroidx/lifecycle/ViewModelStore;->clear()V
 
 # Baseline Profile rules for lifecycle-runtime
 
